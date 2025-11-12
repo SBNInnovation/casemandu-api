@@ -179,7 +179,7 @@ const updateCategory = asyncHandler(async (req, res) => {
 
     const updatedCategory = await category.save()
     res.json({
-      success:false,
+      success:true,
       message:"Updated successfully",
       data:updatedCategory
     })
