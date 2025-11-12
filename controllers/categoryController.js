@@ -1,14 +1,51 @@
 const asyncHandler = require('express-async-handler')
 const Category = require('../models/categoryModel.js')
+const Product = require("../models/productModel.js")
+const slugify = require("slugify")
 
 // @desc    Get all category
 // route    GET /api/categories
 // access   public
-const getCategory = asyncHandler(async (req, res) => {
-  const category = await Category.find({}).sort({ createdAt: -1 })
+// const getCategory = asyncHandler(async (req, res) => {
+//   const category = await Category.find({}).sort({ createdAt: -1 })
+//   const categoryIds = category.map(id => id._id)
+//   console.log(categoryIds)
+//   const getCountProductsOfCategory = await Product.countDocuments({categories})
 
-  res.status(200).json(category)
-})
+//   res.status(200).json({
+//     success:true,
+//     data:category
+//   })
+// })
+
+const getCategory = asyncHandler(async (req, res) => {
+  // Fetch all categories
+  const categories = await Category.find({}).sort({ createdAt: -1 });
+
+  // Map each category with its product count
+  const categoriesWithCounts = await Promise.all(
+    categories.map(async (cat) => {
+      const productCount = await Product.countDocuments({ category: cat._id });
+      return {
+        _id: cat._id,
+        title: cat.title,
+        slug: cat.slug,
+        description: cat.description,
+        image: cat.image,
+        createdAt: cat.createdAt,
+        updatedAt: cat.updatedAt,
+        productCount, 
+      };
+    })
+  );
+
+  res.status(200).json({
+    success: true,
+    data: categoriesWithCounts,
+  });
+});
+
+
 
 // @desc   Get category by id
 // route   GET /api/categories/:id
@@ -17,7 +54,11 @@ const getCategoryById = asyncHandler(async (req, res) => {
   const category = await Category.findById(req.params.id)
 
   if (category) {
-    res.status(200).json(category)
+    res.status(200).json({
+      success:true,
+      message:"category",
+      data:category
+    })
   } else {
     res.status(404)
     throw new Error('Category not found')
@@ -27,44 +68,80 @@ const getCategoryById = asyncHandler(async (req, res) => {
 // @desc  Get all parent category
 // route  GET /api/categories/parent
 // access public
-const getParentCategory = asyncHandler(async (req, res) => {
-  const category = await Category.find({ parentCategory: null })
+// const getParentCategory = asyncHandler(async (req, res) => {
+//   const category = await Category.find({ parentCategory: null })
 
-  res.status(200).json(category)
-})
+//   res.status(200).json(category)
+// })
 
 // @desc  Get all sub category of a parent category
 // route  GET /api/categories/sub/:id
 // access public
-const getSubCategoryByParentId = asyncHandler(async (req, res) => {
-  const category = await Category.find({
-    parentCategory: req.params.id,
-  })
+// const getSubCategoryByParentId = asyncHandler(async (req, res) => {
+//   const category = await Category.find({
+//     parentCategory: req.params.id,
+//   })
 
-  res.status(200).json(category)
-})
+//   res.status(200).json(category)
+// })
 
 // @desc    Insert category
 // route    POST /api/categories
 // access   private/admin
-const createCategory = asyncHandler(async (req, res) => {
-  const { title, description, image, parentCategory, price } = req.body
 
+const createCategory = asyncHandler(async (req, res) => {
+  const { title, description, image } = req.body;
+
+  // Basic validation
+  if (!title || !description) {
+    return res.status(400).json({
+      success: false,
+      message: "Title and description are required.",
+    });
+  }
+
+  // Check existing category (case-insensitive)
+  const existingCategory = await Category.findOne({
+    title: { $regex: new RegExp(`^${title.trim()}$`, "i") },
+  });
+
+  if (existingCategory) {
+    return res.status(409).json({
+      success: false,
+      message: "A category with this name already exists.",
+    });
+  }
+  slug1 = slugify(title, { lower: true, strict: true })
+  // Create new category
   const category = await Category.create({
-    title,
+    title: title.trim(),
+    slug:slug1,
     description,
     image,
-    parentCategory,
-  })
+  });
 
-  res.status(201).json(category)
-})
+  res.status(201).json({
+    success: true,
+    message: "Category created successfully.",
+    data: category,
+  });
+});
 
 // @desc  Delete category
 // route  DELETE /api/categories/:id
 // access private/admin
 const deleteCategory = asyncHandler(async (req, res) => {
-  const category = await Category.findByIdAndDelete(req.params.id)
+  const id = req.params.id;
+
+  const checkCategoriesInProduct = await Product.find({category:id})
+  if(checkCategoriesInProduct){
+    res.status(404).json({
+      success:false,
+      message:"Categories is used in product, cannot delete"
+    })
+    return
+  }
+  const category = await Category.findByIdAndDelete(id)
 
   if (category) {
     res.json({ message: 'Category deleted' })
@@ -79,18 +156,23 @@ const deleteCategory = asyncHandler(async (req, res) => {
 // access private/admin
 
 const updateCategory = asyncHandler(async (req, res) => {
-  const { title, description, image, parentCategory, price } = req.body
+  const { title, description, image} = req.body
 
   const category = await Category.findById(req.params.id)
-
+  const slug1 = title ? slugify(title) : category.slug;
   if (category) {
     category.title = title || category.title
+    category.slug = slug1
     category.description = description || category.description
     category.image = image || category.image
-    category.parentCategory = parentCategory || category.parentCategory
 
     const updatedCategory = await category.save()
-    res.json(updatedCategory)
+    res.json({
+      success:false,
+      message:"Updated successfully",
+      data:updatedCategory
+    })
+
   } else {
     res.status(404)
     throw new Error('Category not found')
@@ -100,8 +182,8 @@ const updateCategory = asyncHandler(async (req, res) => {
 module.exports = {
   getCategory,
   getCategoryById,
-  getParentCategory,
-  getSubCategoryByParentId,
+  // getParentCategory,
+  // getSubCategoryByParentId,
   createCategory,
   deleteCategory,
   updateCategory,

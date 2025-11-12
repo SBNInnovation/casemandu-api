@@ -106,6 +106,7 @@ const createProduct = asyncHandler(async (req, res) => {
     image,
     category,
     optionId, // Optional
+    features,
     description,
     price,
     discount,
@@ -117,6 +118,17 @@ const createProduct = asyncHandler(async (req, res) => {
   if (!categoryExists) {
     res.status(404);
     throw new Error("Category not found");
+  }
+
+  let parsedFeatures;
+  if(features){
+    parsedFeatures = JSON.parse(features)
+    if(parsedFeatures && !Array.isArray(parsedFeatures)){
+      res.status(404).json({
+        success:false,
+        message:"features must be an array"
+      })
+    }
   }
 
   // Validate option (optional)
@@ -135,6 +147,7 @@ const createProduct = asyncHandler(async (req, res) => {
     image,
     category,
     option: optionId || undefined,
+    features:parsedFeatures,
     description,
     price,
     discount,
@@ -150,6 +163,7 @@ const createProduct = asyncHandler(async (req, res) => {
     image: product.image,
     category: product.category,
     option: product.option,
+    features:product.features,
     description: product.description,
     tags: product.tags,
     price: product.price,
@@ -168,6 +182,7 @@ const updateProduct = asyncHandler(async (req, res) => {
     category,
     tags,
     optionId, // Optional
+    features,
     description,
     price,
     discount,
@@ -179,6 +194,17 @@ const updateProduct = asyncHandler(async (req, res) => {
   if (!product) {
     res.status(404);
     throw new Error("Product not found");
+  }
+
+   let parsedFeatures;
+  if(features){
+    parsedFeatures = JSON.parse(features)
+    if(parsedFeatures && !Array.isArray(parsedFeatures)){
+      res.status(404).json({
+        success:false,
+        message:"features must be an array"
+      })
+    }
   }
 
   // Option check (if provided)
@@ -196,6 +222,7 @@ const updateProduct = asyncHandler(async (req, res) => {
   product.image = image || product.image;
   product.category = category || product.category;
   product.tags = tags || product.tags;
+  product.features = (parsedFeatures || product.features)
   product.description = description || product.description;
   product.price = price || product.price;
   product.discount = discount || product.discount;
@@ -211,6 +238,7 @@ const updateProduct = asyncHandler(async (req, res) => {
     category: updatedProduct.category,
     option: updatedProduct.option,
     tags: updatedProduct.tags,
+    features: updatedProduct.features,
     description: updatedProduct.description,
     price: updatedProduct.price,
     discount: updatedProduct.discount,
@@ -234,6 +262,52 @@ const deleteProduct = asyncHandler(async (req, res) => {
   res.json({ message: "Product deleted" });
 });
 
+const changeActivation =  async(req, res) =>{
+  try {
+    const {id} = req.query;
+    const {activation} = req.body;
+
+    if(!id){
+      res.status({
+        success:false,
+        message:"Product Id is required"
+      })
+      return
+    }
+
+    if(activation.activation !== "active" && activation.activation !== "inactive"){
+       { res.status(400).json({ success: false, message: "Invalid activation value. Use 'active' or 'inactive'." });
+                return;
+        }      
+    }
+
+     if(activation.activation === "active"){
+            const tour = await Product.findByIdAndUpdate(id,{isActivate:true},{new:true});
+            if(!tour){
+                res.status(404).json({success:false, message:"Unable to update"})
+                return
+            }
+            res.status(200).json({success:true, message:"Activated"});
+        }else if(activation.activation === "inactive"){
+            const tour = await Product.findByIdAndUpdate(id,{isActivate:false},{new:true});
+            if(!tour){
+                res.status(404).json({success:false, message:"Unable to updated"})
+                return
+            }
+            res.status(200).json({success:true, message:"Deactivated"});
+        }
+
+
+  } catch (error) {
+    if(error instanceof(Error)){
+      res.status(500).json({
+        success:false,
+        message:error.message
+      })
+    }
+  }
+}
+
 module.exports = {
   getProducts,
   getProductsByCategory,
@@ -241,4 +315,5 @@ module.exports = {
   createProduct,
   updateProduct,
   deleteProduct,
+  changeActivation
 };

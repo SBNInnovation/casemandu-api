@@ -6,6 +6,10 @@ const CategorySchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    slug:{
+      type:String,
+      unique:true
+    },
     description: {
       type: String,
       default: '',
@@ -13,23 +17,7 @@ const CategorySchema = new mongoose.Schema(
     image: {
       type: String,
       default: '',
-    },
-    price: {
-      type: Number,
-      default: 0,
-    },
-    isCase: {
-      type: Boolean,
-      default: false,
-    },
-    extraField: {
-      type: String,
-      default: '',
-    },
-    placeholder: {
-      type: String,
-      default: '',
-    },
+    }
   },
   {
     timestamps: true,

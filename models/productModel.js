@@ -29,6 +29,10 @@ const productSchema = mongoose.Schema(
         type: String,
       },
     ],
+    features:{
+      type:[String],
+      default:[]
+    },
     description: {
       type: String,
       default: "",
@@ -54,6 +58,10 @@ const productSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isActivate:{
+      type:Boolean,
+      default:false
+    }
   },
   {
     timestamps: true,
