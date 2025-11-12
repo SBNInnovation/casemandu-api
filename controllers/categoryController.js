@@ -154,7 +154,7 @@ const deleteCategory = asyncHandler(async (req, res) => {
   const category = await Category.findByIdAndDelete(id)
 
   if (category) {
-    res.json({ message: 'Category deleted', data: findCategory.delete_url })
+    res.json({success:true, message: 'Category deleted', data: findCategory.delete_url })
   } else {
     res.status(404)
     throw new Error('Category not found')
