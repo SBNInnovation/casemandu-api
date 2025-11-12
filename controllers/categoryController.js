@@ -90,7 +90,7 @@ const getCategoryById = asyncHandler(async (req, res) => {
 // access   private/admin
 
 const createCategory = asyncHandler(async (req, res) => {
-  const { title, description, image } = req.body;
+  const { title, description, image, delete_url } = req.body;
 
   // Basic validation
   if (!title || !description) {
@@ -118,6 +118,7 @@ const createCategory = asyncHandler(async (req, res) => {
     slug:slug1,
     description,
     image,
+    delete_url
   });
 
   res.status(201).json({
@@ -133,6 +134,7 @@ const createCategory = asyncHandler(async (req, res) => {
 const deleteCategory = asyncHandler(async (req, res) => {
   const id = req.params.id;
 
+
   const checkCategoriesInProduct = await Product.find({category:id})
   if(checkCategoriesInProduct){
     res.status(404).json({
@@ -141,10 +143,18 @@ const deleteCategory = asyncHandler(async (req, res) => {
     })
     return
   }
+  const findCategory = await Category.findById(id)
+  if(!findCategory){
+    res.status(404).json({
+      success:false,
+      message:"Categories not found"
+    })
+    return
+  }
   const category = await Category.findByIdAndDelete(id)
 
   if (category) {
-    res.json({ message: 'Category deleted' })
+    res.json({ message: 'Category deleted', data: findCategory.delete_url })
   } else {
     res.status(404)
     throw new Error('Category not found')
@@ -156,7 +166,7 @@ const deleteCategory = asyncHandler(async (req, res) => {
 // access private/admin
 
 const updateCategory = asyncHandler(async (req, res) => {
-  const { title, description, image} = req.body
+  const { title, description, image, delete_url} = req.body
 
   const category = await Category.findById(req.params.id)
   const slug1 = title ? slugify(title) : category.slug;
@@ -165,6 +175,7 @@ const updateCategory = asyncHandler(async (req, res) => {
     category.slug = slug1
     category.description = description || category.description
     category.image = image || category.image
+    category.delete_url = delete_url || category.delete_url
 
     const updatedCategory = await category.save()
     res.json({

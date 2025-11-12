@@ -30,7 +30,12 @@ dotenv.config();
 connectDB();
 
 // CORS Policy
-app.use(cors());
+app.use(cors({
+      origin: ["casemandu.vercel.app", "admin-casemandu.vercel.app","http://localhost:3000"],
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+      credentials: true, // Allow cookies
+    })
+  )
 
 // Body parser
 app.use(bodyParser.urlencoded({ extended: false }));
