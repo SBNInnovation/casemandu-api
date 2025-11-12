@@ -31,7 +31,7 @@ connectDB();
 
 // CORS Policy
 app.use(cors({
-      origin: ["casemandu.vercel.app", "admin-casemandu.vercel.app","http://localhost:3000"],
+      origin: ["https://client-casemandu.vercel.app", "https://admin-casemandu.vercel.app","http://localhost:3000"],
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
       credentials: true, // Allow cookies
     })
