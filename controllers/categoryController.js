@@ -134,15 +134,15 @@ const createCategory = asyncHandler(async (req, res) => {
 const deleteCategory = asyncHandler(async (req, res) => {
   const id = req.params.id;
 
-
-  const checkCategoriesInProduct = await Product.find({category:id})
-  if(checkCategoriesInProduct){
-    res.status(404).json({
-      success:false,
-      message:"Categories is used in product, cannot delete"
-    })
-    return
+   // Check if any product uses this category
+  const productsUsingCategory = await Product.find({ category: id });
+  if (productsUsingCategory.length > 0) {
+    return res.status(400).json({
+      success: false,
+      message: "Category is used in products and cannot be deleted",
+    });
   }
+
   const findCategory = await Category.findById(id)
   if(!findCategory){
     res.status(404).json({
