@@ -18,6 +18,10 @@ const OptionSchema = new mongoose.Schema(
       type: String,
       required: [true, "Please add an image URL for the option"], // Image is now required
     },
+    delete_url:{
+      type:String,
+      default:""
+    }
   },
   {
     timestamps: true,

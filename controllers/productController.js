@@ -262,6 +262,7 @@ const deleteProduct = asyncHandler(async (req, res) => {
   res.json({ message: "Product deleted" });
 });
 
+
 const changeActivation =  async(req, res) =>{
   try {
     const {id} = req.query;

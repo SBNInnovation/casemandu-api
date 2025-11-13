@@ -7,10 +7,30 @@ const Category = require("../models/categoryModel.js");
 // @desc    Get all options
 // route    GET /api/options
 // access   public
-const getOptions = asyncHandler(async (req, res) => {
+ const getOptions = asyncHandler(async (req, res) => {
+  // Fetch all options
   const options = await Option.find({}).sort({ createdAt: -1 });
 
-  res.status(200).json(options);
+  // Attach product counts to each option
+  const optionsWithCounts = await Promise.all(
+    options.map(async (opt) => {
+      const productCount = await Product.countDocuments({ option: opt._id });
+      return {
+        _id: opt._id,
+        name: opt.name,
+        route: opt.route,
+        image: opt.image,
+        createdAt: opt.createdAt,
+        updatedAt: opt.updatedAt,
+        productCount,
+      };
+    })
+  );
+
+  res.status(200).json({
+    success: true,
+    data: optionsWithCounts,
+  });
 });
 
 // @desc    Get option by id
@@ -20,7 +40,7 @@ const getOptionById = asyncHandler(async (req, res) => {
   const option = await Option.findById(req.params.id);
 
   if (option) {
-    res.status(200).json(option);
+    res.status(200).json({success:true,data:option});
   } else {
     res.status(404);
     throw new Error("Option not found");
@@ -42,16 +62,17 @@ const createOption = asyncHandler(async (req, res) => {
     name,
     route,
     image,
+    delete_url
   });
 
-  res.status(201).json(option);
+  res.status(201).json({success:true, message:"created successfully",data:option});
 });
 
 // @desc    Update an option
 // route    PUT /api/options/:id
 // access   private/admin
 const updateOption = asyncHandler(async (req, res) => {
-  const { name, route, image } = req.body;
+  const { name, route, image, delete_url } = req.body;
 
   const option = await Option.findById(req.params.id);
 
@@ -59,9 +80,10 @@ const updateOption = asyncHandler(async (req, res) => {
     option.name = name || option.name;
     option.route = route || option.route;
     option.image = image || option.image;
+    option.delete_url = delete_url || option.delete_url;
 
     const updatedOption = await option.save();
-    res.json(updatedOption);
+    res.json({success:true, message:"Updated successfully", data:updatedOption});
   } else {
     res.status(404);
     throw new Error("Option not found");
@@ -102,17 +124,25 @@ const getProductsByOptionName = asyncHandler(async (req, res) => {
     .populate("category", "title")
     .populate("option", "name route image");
 
-  res.status(200).json(products);
+  res.status(200).json({success:true, data:products});
 });
 
 // @desc    Delete an option
 // route    DELETE /api/options/:id
 // access   private/admin
 const deleteOption = asyncHandler(async (req, res) => {
+  const checkProductOfOption = await Product.find({option: id})
+  if(checkProductOfOption.length > 0){
+    res.status(404).json({
+      success:false,
+      message:"Product of this option is still present, cannot delete."
+    })
+    return
+  }
   const option = await Option.findByIdAndDelete(req.params.id);
 
   if (option) {
-    res.json({ message: "Option deleted" });
+    res.json({success:true, message: "Option deleted", data:option.delete_url});
   } else {
     res.status(404);
     throw new Error("Option not found");
