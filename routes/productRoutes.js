@@ -7,11 +7,12 @@ const {
   updateProduct,
   getProductsByCategory,
   changeActivation,
+  changeNewStatus,
 } = require('../controllers/productController.js')
 
 const router = express.Router()
 
-router.route('/').get(getProducts).post(createProduct).patch(changeActivation)
+router.route('/').get(getProducts).post(createProduct).patch(changeActivation).patch(changeNewStatus)
 router
   .route('/:slug')
   .get(getProductBySlug)

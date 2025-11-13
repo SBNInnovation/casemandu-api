@@ -110,7 +110,7 @@ const createProduct = asyncHandler(async (req, res) => {
     description,
     price,
     discount,
-    new: isNew,
+    // new: isNew,
   } = req.body;
 
   // Validate category
@@ -151,7 +151,7 @@ const createProduct = asyncHandler(async (req, res) => {
     description,
     price,
     discount,
-    new: isNew,
+    // new: isNew,
   });
 
   await product.save();
@@ -168,7 +168,7 @@ const createProduct = asyncHandler(async (req, res) => {
     tags: product.tags,
     price: product.price,
     discount: product.discount,
-    new: product.new,
+    // new: product.new,
   });
 });
 
@@ -186,7 +186,7 @@ const updateProduct = asyncHandler(async (req, res) => {
     description,
     price,
     discount,
-    new: isNew,
+    // new: isNew,
   } = req.body;
 
   const product = await Product.findOne({ slug: req.params.slug });
@@ -226,7 +226,7 @@ const updateProduct = asyncHandler(async (req, res) => {
   product.description = description || product.description;
   product.price = price || product.price;
   product.discount = discount || product.discount;
-  product.new = isNew || product.new;
+  // product.new = isNew || product.new;
 
   const updatedProduct = await product.save();
 
@@ -242,7 +242,7 @@ const updateProduct = asyncHandler(async (req, res) => {
     description: updatedProduct.description,
     price: updatedProduct.price,
     discount: updatedProduct.discount,
-    new: updatedProduct.new,
+    // new: updatedProduct.new,
   });
 });
 
@@ -309,6 +309,52 @@ const changeActivation =  async(req, res) =>{
   }
 }
 
+const changeNewStatus = async() =>{
+ try {
+    const {id} = req.query;
+    const {status} = req.body;
+
+    if(!id){
+      res.status({
+        success:false,
+        message:"Product Id is required"
+      })
+      return
+    }
+
+    if(status.status !== "new" && status.status !== "old"){
+       { res.status(400).json({ success: false, message: "Invalid status value. Use 'new' or 'old'." });
+                return;
+        }      
+    }
+
+     if(status.status === ""){
+            const prd = await Product.findByIdAndUpdate(id,{new:true},{new:true});
+            if(!prd){
+                res.status(404).json({success:false, message:"Unable to update"})
+                return
+            }
+            res.status(200).json({success:true, message:"Changed to new"});
+        }else if(status.status === "old"){
+            const prd = await Product.findByIdAndUpdate(id,{new:false},{new:true});
+            if(!prd){
+                res.status(404).json({success:false, message:"Unable to update"})
+                return
+            }
+            res.status(200).json({success:true, message:"Changed to old"});
+        }
+
+
+  } catch (error) {
+    if(error instanceof(Error)){
+      res.status(500).json({
+        success:false,
+        message:error.message
+      })
+    }
+  }
+}
+
 module.exports = {
   getProducts,
   getProductsByCategory,
@@ -316,5 +362,6 @@ module.exports = {
   createProduct,
   updateProduct,
   deleteProduct,
-  changeActivation
+  changeActivation,
+  changeNewStatus
 };
