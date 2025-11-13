@@ -131,7 +131,8 @@ const getProductsByOptionName = asyncHandler(async (req, res) => {
 // route    DELETE /api/options/:id
 // access   private/admin
 const deleteOption = asyncHandler(async (req, res) => {
-  const checkProductOfOption = await Product.find({option: id})
+
+  const checkProductOfOption = await Product.find({option: req.params.id})
   if(checkProductOfOption.length > 0){
     res.status(404).json({
       success:false,
