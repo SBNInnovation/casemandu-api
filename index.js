@@ -23,6 +23,7 @@ const pinterestRoute = require("./routes/pinterestRoutes.js");
 const emailTest = require("./routes/ConfirmEmail.js");
 const aiRoutes = require("./routes/aiRoute.js");
 const optionRoutes = require("./routes/optionRoutes.js");
+const Product = require("./models/productModel.js");
 
 const app = express();
 
@@ -66,6 +67,20 @@ app.use(notFound);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
+
+// (async () => {
+//   try {
+//     const result = await Product.updateMany(
+//       { isActivate: { $exists: false } },
+//       { $set: { isActivate: false } }
+//     );
+//     if (result.modifiedCount > 0) {
+//       console.log(`✅ Updated ${result.modifiedCount} old products with isActivate:false`);
+//     }
+//   } catch (error) {
+//     console.error("❌ Error updating old products:", error);
+//   }
+// })();
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

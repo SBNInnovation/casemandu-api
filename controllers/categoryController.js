@@ -137,7 +137,7 @@ const deleteCategory = asyncHandler(async (req, res) => {
    // Check if any product uses this category
   const productsUsingCategory = await Product.find({ category: id });
   if (productsUsingCategory.length > 0) {
-    return res.status(400).json({
+    return res.status(200).json({
       success: false,
       message: "Category is used in products and cannot be deleted",
     });
