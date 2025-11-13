@@ -51,7 +51,7 @@ const getOptionById = asyncHandler(async (req, res) => {
 // route    POST /api/options
 // access   private/admin
 const createOption = asyncHandler(async (req, res) => {
-  const { name, route, image } = req.body;
+  const { name, route, image, delete_url } = req.body;
 
   if (!name || !route || !image) {
     res.status(400);
