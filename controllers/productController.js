@@ -79,7 +79,7 @@ const getProductForAdmin = async (req, res) => {
     }
 
     // Activation filter
-    if (activation === "active") query.isActivate = true;
+    if (activation === "active") query.isActivate = true; 
     if (activation === "inactive") query.isActivate = false;
 
     // New product filter
@@ -114,6 +114,14 @@ const getProductForAdmin = async (req, res) => {
       .limit(limit)
       .skip(skip);
 
+      if(!products){
+        res.status(200).json({
+          success:true,
+          message:"No product found",
+          data:{totalProducts:[]}
+        })
+      }
+
 
     const monthsAgo = new Date();
     monthsAgo.setMonth(monthsAgo.getMonth() - 1);
@@ -135,7 +143,7 @@ const getProductForAdmin = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: {
-        products,
+        totalProducts:products,
         pagination: {
           totalProducts,
           totalActive: totalActiveProd,
