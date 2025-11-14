@@ -13,7 +13,7 @@ const {
 
 const router = express.Router()
 
-router.route('/').get(getProducts).post(createProduct).patch(changeActivation).patch(changeNewStatus).get(getProductForAdmin)
+router.route('/').post(createProduct).patch(changeActivation).patch(changeNewStatus).get(getProductForAdmin)
 router
   .route('/:slug')
   .get(getProductBySlug)
