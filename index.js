@@ -102,30 +102,30 @@ const PORT = process.env.PORT || 5000;
 //   }
 // })();
 
-(async () => {
-  try {
-    // Calculate date 4 months ago
-    const fourMonthsAgo = new Date();
-    fourMonthsAgo.setMonth(fourMonthsAgo.getMonth() - 4);
+// (async () => {
+//   try {
+//     // Calculate date 4 months ago
+//     const fourMonthsAgo = new Date();
+//     fourMonthsAgo.setMonth(fourMonthsAgo.getMonth() - 4);
 
-    // 1️⃣ Set new: true for products added in the last 4 months
-    const recentResult = await Product.updateMany(
-      { createdAt: { $gte: fourMonthsAgo } },
-      { $set: { new: true } }
-    );
+//     // 1️⃣ Set new: true for products added in the last 4 months
+//     const recentResult = await Product.updateMany(
+//       { createdAt: { $gte: fourMonthsAgo } },
+//       { $set: { new: true } }
+//     );
 
-    // 2️⃣ Set new: false for products added before 4 months
-    const oldResult = await Product.updateMany(
-      { createdAt: { $lt: fourMonthsAgo } },
-      { $set: { new: false } }
-    );
+//     // 2️⃣ Set new: false for products added before 4 months
+//     const oldResult = await Product.updateMany(
+//       { createdAt: { $lt: fourMonthsAgo } },
+//       { $set: { new: false } }
+//     );
 
-    console.log(`✅ Products added in last 4 months set to new: true → ${recentResult.modifiedCount}`);
-    console.log(`✅ Older products set to new: false → ${oldResult.modifiedCount}`);
-  } catch (err) {
-    console.error("❌ Error updating products:", err);
-  }
-})();
+//     console.log(`✅ Products added in last 4 months set to new: true → ${recentResult.modifiedCount}`);
+//     console.log(`✅ Older products set to new: false → ${oldResult.modifiedCount}`);
+//   } catch (err) {
+//     console.error("❌ Error updating products:", err);
+//   }
+// })();
 
 
 

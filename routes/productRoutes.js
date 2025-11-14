@@ -12,7 +12,7 @@ const {
 
 const router = express.Router()
 
-router.route('/').get(getProducts).post(createProduct)
+router.route('/').get(getProducts).post(createProduct).patch(changeActivation).patch(changeNewStatus)
 router
   .route('/:slug')
   .get(getProductBySlug)
@@ -21,6 +21,6 @@ router
 
 router.route('/category/:slug').get(getProductsByCategory)
 
-router.route('/:id').patch(changeActivation).patch(changeNewStatus)
+// router.route('/').post(changeActivation).post(changeNewStatus)
 
 module.exports = router

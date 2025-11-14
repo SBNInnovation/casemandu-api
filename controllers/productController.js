@@ -263,51 +263,54 @@ const deleteProduct = asyncHandler(async (req, res) => {
 });
 
 
-const changeActivation =  async(req, res) =>{
+const changeActivation = async (req, res) => {
   try {
-    const {id} = req.query;
-    const {activation} = req.body;
+    const { id } = req.query;
+    const { activation } = req.body;
 
-    if(!id){
-      res.status({
-        success:false,
-        message:"Product Id is required"
-      })
-      return
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Product Id is required",
+      });
     }
 
-    if(activation.activation !== "active" && activation.activation !== "inactive"){
-       { res.status(400).json({ success: false, message: "Invalid activation value. Use 'active' or 'inactive'." });
-                return;
-        }      
+    // validation
+    if (activation !== "active" && activation !== "inactive") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid activation value. Use 'active' or 'inactive'.",
+      });
     }
 
-     if(activation.activation === "active"){
-            const tour = await Product.findByIdAndUpdate(id,{isActivate:true},{new:true});
-            if(!tour){
-                res.status(404).json({success:false, message:"Unable to update"})
-                return
-            }
-            res.status(200).json({success:true, message:"Activated"});
-        }else if(activation.activation === "inactive"){
-            const tour = await Product.findByIdAndUpdate(id,{isActivate:false},{new:true});
-            if(!tour){
-                res.status(404).json({success:false, message:"Unable to updated"})
-                return
-            }
-            res.status(200).json({success:true, message:"Deactivated"});
-        }
+    const isActivate = activation === "active";
 
+    const updated = await Product.findByIdAndUpdate(
+      id,
+      { isActivate },
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: isActivate ? "Activated" : "Deactivated",
+      data: updated
+    });
 
   } catch (error) {
-    if(error instanceof(Error)){
-      res.status(500).json({
-        success:false,
-        message:error.message
-      })
-    }
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
-}
+};
 
 const changeNewStatus = async() =>{
  try {
@@ -322,20 +325,20 @@ const changeNewStatus = async() =>{
       return
     }
 
-    if(status.status !== "new" && status.status !== "old"){
+    if(status !== "new" && status !== "old"){
        { res.status(400).json({ success: false, message: "Invalid status value. Use 'new' or 'old'." });
                 return;
         }      
     }
 
-     if(status.status === ""){
+     if(status === "new"){
             const prd = await Product.findByIdAndUpdate(id,{new:true},{new:true});
             if(!prd){
                 res.status(404).json({success:false, message:"Unable to update"})
                 return
             }
             res.status(200).json({success:true, message:"Changed to new"});
-        }else if(status.status === "old"){
+        }else if(status === "old"){
             const prd = await Product.findByIdAndUpdate(id,{new:false},{new:true});
             if(!prd){
                 res.status(404).json({success:false, message:"Unable to update"})
