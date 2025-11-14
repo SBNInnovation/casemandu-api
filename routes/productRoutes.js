@@ -8,11 +8,12 @@ const {
   getProductsByCategory,
   changeActivation,
   changeNewStatus,
+  getProductForAdmin,
 } = require('../controllers/productController.js')
 
 const router = express.Router()
 
-router.route('/').get(getProducts).post(createProduct).patch(changeActivation).patch(changeNewStatus)
+router.route('/').get(getProducts).post(createProduct).patch(changeActivation).patch(changeNewStatus).get(getProductForAdmin)
 router
   .route('/:slug')
   .get(getProductBySlug)

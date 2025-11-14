@@ -48,6 +48,117 @@ const getProducts = asyncHandler(async (req, res) => {
   res.status(200).json({ products, page, pages: Math.ceil(count / pageSize) });
 });
 
+const getProductForAdmin = async (req, res) => {
+  try {
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const limit = Math.max(parseInt(req.query.limit) || 10, 1);
+    const activation = req.query.activation?.toString();
+    const status = req.query.status?.toString();
+    const search = req.query.search?.toString();
+    const categories = req.query.categories?.toString();
+    const options = req.query.options?.toString();
+    const sort = req.query.sort?.toString();
+
+    const skip = (page - 1) * limit;
+    let query = {};
+
+
+    // 🔍 Search filter
+    if (search) {
+      query.$or = [{ title: { $regex: search, $options: "i" } }];
+    }
+
+    //  Category filter
+    if (categories) {
+      query.category = categories;
+    }
+
+    // Option filter
+    if (options) {
+      query.option = options;
+    }
+
+    // Activation filter
+    if (activation === "active") query.isActivate = true;
+    if (activation === "inactive") query.isActivate = false;
+
+    // New product filter
+    if (status === "new") {
+      query.new = true;
+    } else if (status === "old") {
+      query.new = false;
+    }
+
+    // Sorting logic
+    let sortQuery = {};
+    switch (sort) {
+      case "createdAtasc":
+        sortQuery.createdAt = 1;
+        break;
+      case "createdAtdesc":
+        sortQuery.createdAt = -1;
+        break;
+      case "asc":
+        sortQuery.price = 1;
+        break;
+      case "desc":
+        sortQuery.price = -1;
+        break;
+      default:
+        sortQuery.createdAt = -1;
+    }
+
+    // Fetch filtered products
+    const products = await Product.find(query)
+      .sort(sortQuery)
+      .limit(limit)
+      .skip(skip);
+
+
+    const monthsAgo = new Date();
+    monthsAgo.setMonth(monthsAgo.getMonth() - 1);
+
+    // Get dashboard counters
+    const [
+      totalProducts,
+      totalActiveProd,
+      totalInactiveProd,
+      newThisMonth
+    ] = await Promise.all([
+      Product.countDocuments(query),
+      Product.countDocuments({ isActivate: true }),
+      Product.countDocuments({ isActivate: false }),
+      Product.countDocuments({ createdAt: { $gte: monthsAgo } }),
+    ]);
+
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        products,
+        pagination: {
+          totalProducts,
+          totalActive: totalActiveProd,
+          totalInactive: totalInactiveProd,
+          newProduct: newThisMonth,
+          currentPage: page,
+          totalPages: Math.ceil(totalProducts / limit),
+          limit,
+        },
+      },
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+
+
 // @desc    Get all products by category
 // @route   GET /api/products/category/:slug
 // @access  Public
@@ -366,5 +477,6 @@ module.exports = {
   updateProduct,
   deleteProduct,
   changeActivation,
-  changeNewStatus
+  changeNewStatus,
+  getProductForAdmin
 };
