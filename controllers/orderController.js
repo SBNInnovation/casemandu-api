@@ -290,6 +290,32 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
   }
 });
 
+const deleteOrder = async(req,res) =>{
+  try {
+    const id =  req.params.id;
+    const deleteOrd = await Order.findByIdAndDelete(id);
+    if(!deleteOrd){
+      res.status(400).json({
+        success:false,
+        message:"Unable to delete"
+      })
+      return
+    }
+    res.status(200).json({
+      success:true,
+      message:"Deleted successfully"
+    })
+
+  } catch (error) {
+    if(error instanceof(Error)){
+      res.status(500).json({
+        success:false,
+        message:error.message
+      })
+    }
+  }
+}
+
 // @desc Track order
 // @route GET /api/orders/track/:id
 // @access Private
@@ -317,4 +343,5 @@ module.exports = {
   updateOrderToDelivered,
   updateOrderStatus,
   trackOrder,
+  deleteOrder
 };
