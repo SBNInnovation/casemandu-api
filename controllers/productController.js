@@ -293,6 +293,8 @@ const createProduct = asyncHandler(async (req, res) => {
     tags: product.tags,
     price: product.price,
     discount: product.discount,
+    createdAt: product.createdAt,
+    updatedAt: product.updatedAt,
     // new: product.new,
   });
 });
@@ -367,6 +369,8 @@ const updateProduct = asyncHandler(async (req, res) => {
     description: updatedProduct.description,
     price: updatedProduct.price,
     discount: updatedProduct.discount,
+    createdAt: product.createdAt,
+    updatedAt: product.updatedAt,
     // new: updatedProduct.new,
   });
 });
