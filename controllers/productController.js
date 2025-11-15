@@ -109,7 +109,7 @@ const getProductForAdmin = async (req, res) => {
     }
 
     // Fetch filtered products
-    const products = await Product.find(query)
+    const products = await Product.find(query).populate("category", "title -_id")
       .sort(sortQuery)
       .limit(limit)
       .skip(skip);
@@ -122,6 +122,9 @@ const getProductForAdmin = async (req, res) => {
         })
       }
 
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1); // 1st day of current month
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999); // last day of month
 
     const monthsAgo = new Date();
     monthsAgo.setMonth(monthsAgo.getMonth() - 1);
@@ -138,7 +141,7 @@ const getProductForAdmin = async (req, res) => {
       Product.countDocuments(query),
       Product.countDocuments({ isActivate: true }),
       Product.countDocuments({ isActivate: false }),
-      Product.countDocuments({ createdAt: { $gte: monthsAgo } }),
+      Product.countDocuments({createdAt: { $gte: startOfMonth, $lte: endOfMonth }})
     ]);
 
 
