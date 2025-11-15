@@ -7,46 +7,46 @@ const createSLUG = require("../utils/createSLUG");
 // @desc    Get all products
 // @route   GET /api/products
 // @access  Public
-const getProducts = asyncHandler(async (req, res) => {
-  const keyword = req.query.keyword
-    ? {
-        title: {
-          $regex: req.query.keyword,
-          $options: "i",
-        },
-      }
-    : {};
+// const getProducts = asyncHandler(async (req, res) => {
+//   const keyword = req.query.keyword
+//     ? {
+//         title: {
+//           $regex: req.query.keyword,
+//           $options: "i",
+//         },
+//       }
+//     : {};
 
-  const count = await Product.countDocuments({ ...keyword });
+//   const count = await Product.countDocuments({ ...keyword });
 
-  const pageSize = Number(req.query.pageSize) || count;
-  const page = Number(req.query.pageNumber) || 1;
-  const displayBy = req.query.displayBy || "createdAt";
+//   const pageSize = Number(req.query.pageSize) || count;
+//   const page = Number(req.query.pageNumber) || 1;
+//   const displayBy = req.query.displayBy || "createdAt";
 
-  let sortCriteria = {};
-  switch (displayBy) {
-    case "newArrival":
-      sortCriteria = { new: -1 };
-      break;
-    case "bestSeller":
-      sortCriteria = { saleCount: -1 };
-      break;
-    case "mostPopular":
-      sortCriteria = { totalViews: -1 };
-      break;
-    default:
-      sortCriteria = { createdAt: -1 };
-  }
+//   let sortCriteria = {};
+//   switch (displayBy) {
+//     case "newArrival":
+//       sortCriteria = { new: -1 };
+//       break;
+//     case "bestSeller":
+//       sortCriteria = { saleCount: -1 };
+//       break;
+//     case "mostPopular":
+//       sortCriteria = { totalViews: -1 };
+//       break;
+//     default:
+//       sortCriteria = { createdAt: -1 };
+//   }
 
-  const products = await Product.find({ ...keyword })
-    .populate("category", "title")
-    .populate("option", "name route image") // Populate option
-    .sort(sortCriteria)
-    .limit(pageSize)
-    .skip(pageSize * (page - 1));
+//   const products = await Product.find({ ...keyword })
+//     .populate("category", "title")
+//     .populate("option", "name route image") // Populate option
+//     .sort(sortCriteria)
+//     .limit(pageSize)
+//     .skip(pageSize * (page - 1));
 
-  res.status(200).json({ products, page, pages: Math.ceil(count / pageSize) });
-});
+//   res.status(200).json({ products, page, pages: Math.ceil(count / pageSize) });
+// });
 
 const getProductForAdmin = async (req, res) => {
   try {
@@ -225,7 +225,7 @@ const getProductBySlug = asyncHandler(async (req, res) => {
 // @desc    Create a product
 // @route   POST /api/products
 // @access  Private/Admin
-const createProduct = asyncHandler(async (req, res) => {
+const addProduct = asyncHandler(async (req, res) => {
   const {
     title,
     image,
@@ -243,6 +243,7 @@ const createProduct = asyncHandler(async (req, res) => {
   if (!categoryExists) {
     res.status(404);
     throw new Error("Category not found");
+    return
   }
 
   let parsedFeatures;
@@ -253,6 +254,7 @@ const createProduct = asyncHandler(async (req, res) => {
         success:false,
         message:"features must be an array"
       })
+      return
     }
   }
 
@@ -264,6 +266,7 @@ const createProduct = asyncHandler(async (req, res) => {
       res.status(404);
       throw new Error("Option not found");
     }
+    return
   }
 
   const product = new Product({
@@ -276,12 +279,15 @@ const createProduct = asyncHandler(async (req, res) => {
     description,
     price,
     discount,
+    isNew:true
     // new: isNew,
   });
 
   await product.save();
 
-  res.status(201).json({
+  console.log(product.createdAt)
+
+  return res.status(201).json({
     _id: product._id,
     slug: product.slug,
     title: product.title,
@@ -487,13 +493,13 @@ const changeNewStatus = async(req,res) =>{
 }
 
 module.exports = {
-  getProducts,
+  // getProducts,
   getProductsByCategory,
   getProductBySlug,
-  createProduct,
   updateProduct,
   deleteProduct,
   changeActivation,
   changeNewStatus,
-  getProductForAdmin
+  getProductForAdmin,
+  addProduct
 };

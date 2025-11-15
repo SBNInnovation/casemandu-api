@@ -25,6 +25,7 @@ const aiRoutes = require("./routes/aiRoute.js");
 const optionRoutes = require("./routes/optionRoutes.js");
 const Product = require("./models/productModel.js");
 const { dashboardRouter } = require("./routes/dashboardRoutes.js");
+const Category = require("./models/categoryModel.js");
 
 
 const app = express();
@@ -128,6 +129,7 @@ const PORT = process.env.PORT || 5000;
 //     console.error("❌ Error updating products:", err);
 //   }
 // })();
+
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

@@ -1,7 +1,6 @@
 const express = require('express')
+
 const {
-  getProducts,
-  createProduct,
   getProductBySlug,
   deleteProduct,
   updateProduct,
@@ -9,11 +8,12 @@ const {
   changeActivation,
   changeNewStatus,
   getProductForAdmin,
+  addProduct,
 } = require('../controllers/productController.js')
 
 const router = express.Router()
 
-router.route('/').post(createProduct).patch(changeActivation).get(getProductForAdmin)
+router.route('/').post(addProduct).patch(changeActivation).get(getProductForAdmin)
 router.route('/status').put(changeNewStatus)
 router
   .route('/:slug')
