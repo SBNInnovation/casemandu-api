@@ -129,10 +129,6 @@ const PORT = process.env.PORT || 5000;
 //   }
 // })();
 
-const oldProducts = async() =>{ await Product.find({ isNew: false });
-console.log(oldProducts.length);
-}
-oldProducts()
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

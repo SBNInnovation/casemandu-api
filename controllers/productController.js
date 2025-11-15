@@ -114,7 +114,7 @@ const getProductForAdmin = async (req, res) => {
       .limit(limit)
       .skip(skip);
 
-      if(!products){
+      if(products.length === 0){
         res.status(200).json({
           success:true,
           message:"No product found",
@@ -434,7 +434,7 @@ const changeActivation = async (req, res) => {
   }
 };
 
-const changeNewStatus = async() =>{
+const changeNewStatus = async(req,res) =>{
  try {
     const {id} = req.query;
     const {status} = req.body;
@@ -468,7 +468,6 @@ const changeNewStatus = async() =>{
             }
             res.status(200).json({success:true, message:"Changed to old"});
         }
-
 
   } catch (error) {
     if(error instanceof(Error)){

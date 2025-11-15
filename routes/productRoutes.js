@@ -14,6 +14,7 @@ const {
 const router = express.Router()
 
 router.route('/').post(createProduct).patch(changeActivation).get(getProductForAdmin)
+router.route('/status').put(changeNewStatus)
 router
   .route('/:slug')
   .get(getProductBySlug)
@@ -21,8 +22,8 @@ router
   .put(updateProduct)
 
 router.route('/category/:slug').get(getProductsByCategory)
-router.route('/status').patch(changeNewStatus)
+
 
 // router.route('/').post(changeActivation).post(changeNewStatus)
 
-module.exports = router
+module.exports = router 
