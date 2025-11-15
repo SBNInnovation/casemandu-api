@@ -84,9 +84,9 @@ const getProductForAdmin = async (req, res) => {
 
     // New product filter
     if (status === "new") {
-      query.new = true;
+      query.isNew = true;
     } else if (status === "old") {
-      query.new = false;
+      query.isNew = false;
     }
 
     // Sorting logic
@@ -129,10 +129,12 @@ const getProductForAdmin = async (req, res) => {
     // Get dashboard counters
     const [
       totalProducts,
+      productsFound,
       totalActiveProd,
       totalInactiveProd,
       newThisMonth
     ] = await Promise.all([
+      Product.countDocuments({}),
       Product.countDocuments(query),
       Product.countDocuments({ isActivate: true }),
       Product.countDocuments({ isActivate: false }),
@@ -146,6 +148,7 @@ const getProductForAdmin = async (req, res) => {
         totalProducts:products,
         pagination: {
           totalProducts,
+          productsFound,
           totalActive: totalActiveProd,
           totalInactive: totalInactiveProd,
           newProduct: newThisMonth,
@@ -451,14 +454,14 @@ const changeNewStatus = async() =>{
     }
 
      if(status === "new"){
-            const prd = await Product.findByIdAndUpdate(id,{new:true},{new:true});
+            const prd = await Product.findByIdAndUpdate(id,{isNew:true},{new:true});
             if(!prd){
                 res.status(404).json({success:false, message:"Unable to update"})
                 return
             }
             res.status(200).json({success:true, message:"Changed to new"});
         }else if(status === "old"){
-            const prd = await Product.findByIdAndUpdate(id,{new:false},{new:true});
+            const prd = await Product.findByIdAndUpdate(id,{isNew:false},{new:true});
             if(!prd){
                 res.status(404).json({success:false, message:"Unable to update"})
                 return

@@ -54,10 +54,14 @@ const productSchema = mongoose.Schema(
       type: Number,
       default: 0,
     },
-    new: {
-      type: Boolean,
+    isNew:{
+      type:Boolean,
       default: false,
     },
+    // new: {
+    //   type: Boolean,
+    //   default: false,
+    // },
     isActivate:{
       type:Boolean,
       default:false
