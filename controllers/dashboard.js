@@ -28,7 +28,7 @@ const getDashboardData = async (req, res) => {
       },
       {
         type: 'products',
-        label: 'Products Delivered',
+        label: 'Total Products',
         value: productsDelivered.toString(),
         // subtext: 'This month',
       },
@@ -118,42 +118,7 @@ const getDashboardData = async (req, res) => {
         },
       },
     ]);
-
-    const salesByOptionAgg = await Order.aggregate([
-    { $unwind: '$orderItems' },
-    {
-        $lookup: {
-        from: 'products',
-        localField: 'orderItems.name',
-        foreignField: 'title',
-        as: 'product',
-        },
-    },
-    { $unwind: '$product' },
-    {
-        $group: {
-        _id: '$product.option', // Group by option
-        value: { $sum: '$orderItems.price' },
-        },
-    },
-    {
-        $lookup: {
-        from: 'options',          // Join with Option collection
-        localField: '_id',
-        foreignField: '_id',
-        as: 'option',
-        },
-    },
-    { $unwind: '$option' },
-    {
-        $project: {
-        name: '$option.title',   // Option title as name
-        value: 1,
-        },
-    },
-    ]);
-
-
+    
     // ------------------ Final Response ------------------
     res.json({
       stats: statsData,
