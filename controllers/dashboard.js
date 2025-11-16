@@ -17,38 +17,38 @@ const getDashboardData = async (req, res) => {
 
     const totalRevenue = totalRevenueAgg[0]?.totalRevenue || 0;
     const totalOrders = totalRevenueAgg[0]?.totalOrders || 0;
-    const productsDelivered = await Product.countDocuments({ isActivate: true });
+    const productsDelivered = await Order.countDocuments({ status: "delivered" });
 
     const statsData = [
       {
         type: 'revenue',
         label: 'Total Revenue',
         value: `Rs. ${totalRevenue.toLocaleString()}`,
-        subtext: '+12% from last month',
+        // subtext: '+12% from last month',
       },
       {
         type: 'products',
         label: 'Products Delivered',
         value: productsDelivered.toString(),
-        subtext: 'This month',
+        // subtext: 'This month',
       },
       {
         type: 'orders',
         label: 'Total Orders',
         value: totalOrders.toString(),
-        subtext: '+8% from last month',
+        // subtext: '+8% from last month',
       },
     ];
 
-    // ------------------ Order History ------------------
+    // ------------------ Order History By Year ------------------
     const orderHistoryAgg = await Order.aggregate([
       {
         $group: {
-          _id: { $month: '$orderedAt' },
+          _id: { year: { $year: '$orderedAt' }, month: { $month: '$orderedAt' } },
           orders: { $sum: 1 },
         },
       },
-      { $sort: { '_id': 1 } },
+      { $sort: { '_id.year': 1, '_id.month': 1 } },
     ]);
 
     const months = [
@@ -56,9 +56,32 @@ const getDashboardData = async (req, res) => {
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ];
 
-    const orderHistoryData = months.map((m, i) => {
-      const monthData = orderHistoryAgg.find(o => o._id === i + 1);
-      return { month: m, orders: monthData ? monthData.orders : 0 };
+    // Transform aggregation to { year: [{month, orders}] }
+    const orderHistoryDataByYear = {};
+    orderHistoryAgg.forEach(item => {
+      const year = item._id.year;
+      const monthIndex = item._id.month - 1;
+      if (!orderHistoryDataByYear[year]) orderHistoryDataByYear[year] = months.map(m => ({ month: m, orders: 0 }));
+      orderHistoryDataByYear[year][monthIndex].orders = item.orders;
+    });
+
+    // ------------------ Revenue By Year ------------------
+    const revenueAgg = await Order.aggregate([
+      {
+        $group: {
+          _id: { year: { $year: '$orderedAt' }, month: { $month: '$orderedAt' } },
+          revenue: { $sum: '$priceSummary.grandTotal' },
+        },
+      },
+      { $sort: { '_id.year': 1, '_id.month': 1 } },
+    ]);
+
+    const revenueByMonthDataByYear = {};
+    revenueAgg.forEach(item => {
+      const year = item._id.year;
+      const monthIndex = item._id.month - 1;
+      if (!revenueByMonthDataByYear[year]) revenueByMonthDataByYear[year] = months.map(m => ({ month: m, revenue: 0 }));
+      revenueByMonthDataByYear[year][monthIndex].revenue = item.revenue;
     });
 
     // ------------------ Sales by Category ------------------
@@ -96,30 +119,13 @@ const getDashboardData = async (req, res) => {
       },
     ]);
 
-    // ------------------ Revenue by Month ------------------
-    const revenueByMonthAgg = await Order.aggregate([
-      {
-        $group: {
-          _id: { $month: '$orderedAt' },
-          revenue: { $sum: '$priceSummary.grandTotal' },
-        },
-      },
-      { $sort: { '_id': 1 } },
-    ]);
-
-    const revenueByMonthData = months.map((m, i) => {
-      const monthData = revenueByMonthAgg.find(r => r._id === i + 1);
-      return { month: m, revenue: monthData ? monthData.revenue : 0 };
-    });
-
     // ------------------ Final Response ------------------
     res.json({
       stats: statsData,
-      orderHistory: orderHistoryData,
+      orderHistory: orderHistoryDataByYear,
+      revenueByMonth: revenueByMonthDataByYear,
       salesByCategory: salesByCategoryAgg,
-      revenueByMonth: revenueByMonthData,
     });
-
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
