@@ -118,14 +118,13 @@ const getDashboardData = async (req, res) => {
         },
       },
     ]);
-    
+
     // ------------------ Final Response ------------------
     res.json({
       stats: statsData,
       orderHistory: orderHistoryDataByYear,
       revenueByMonth: revenueByMonthDataByYear,
       salesByCategory: salesByCategoryAgg,
-      salesByOption: salesByOptionAgg
     });
   } catch (err) {
     console.error(err);
