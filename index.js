@@ -23,9 +23,10 @@ const pinterestRoute = require("./routes/pinterestRoutes.js");
 const emailTest = require("./routes/ConfirmEmail.js");
 const aiRoutes = require("./routes/aiRoute.js");
 const optionRoutes = require("./routes/optionRoutes.js");
-const Product = require("./models/productModel.js");
+// const Product = require("./models/productModel.js");
 const { dashboardRouter } = require("./routes/dashboardRoutes.js");
-const Category = require("./models/categoryModel.js");
+// const Category = require("./models/categoryModel.js");
+const serverless = require("serverless-http"); // import
 
 
 const app = express();
@@ -141,9 +142,12 @@ const PORT = process.env.PORT || 5000;
 // check()
 
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+// app.listen(PORT, () => {
+//   console.log(`Server is running on port ${PORT}`);
+// });
 
+// Export for Vercel
+module.exports = app;
+module.exports.handler = serverless(app);
 
  // "node": "18.x"
