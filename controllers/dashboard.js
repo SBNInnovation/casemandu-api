@@ -17,7 +17,7 @@ const getDashboardData = async (req, res) => {
 
     const totalRevenue = totalRevenueAgg[0]?.totalRevenue || 0;
     const totalOrders = totalRevenueAgg[0]?.totalOrders || 0;
-    const productsDelivered = await Order.countDocuments({});
+    const productsDelivered = await Product.countDocuments({});
 
     const statsData = [
       {
