@@ -42,8 +42,7 @@ app.use(cors({
   )
 
 // Body parser
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+app.use(express.json());
 
 // Mount routes
 app.use("/api/categories", categoryRoutes);
@@ -129,6 +128,17 @@ const PORT = process.env.PORT || 5000;
 //     console.error("❌ Error updating products:", err);
 //   }
 // })();
+
+// const check =async()=>{
+//   const categoryExists = await Category.findById("6569edc0120b664752a53d2e");
+//     if (!categoryExists) {
+//       res.status(404);
+//       throw new Error("Category not found");
+//       return
+//     }
+//     console.log(categoryExists)
+// }
+// check()
 
 
 app.listen(PORT, () => {

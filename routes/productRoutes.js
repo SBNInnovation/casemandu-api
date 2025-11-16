@@ -1,19 +1,10 @@
 const express = require('express')
-
-const {
-  getProductBySlug,
-  deleteProduct,
-  updateProduct,
-  getProductsByCategory,
-  changeActivation,
-  changeNewStatus,
-  getProductForAdmin,
-  addProduct,
-} = require('../controllers/productController.js')
+const { createProduct, changeActivation, getProductForAdmin, changeNewStatus, getProductBySlug, deleteProduct, updateProduct, getProductsByCategory } = require('../controllers/productController')
 
 const router = express.Router()
 
-router.route('/').post(addProduct).patch(changeActivation).get(getProductForAdmin)
+router.route("/").post(createProduct)
+router.route('/').patch(changeActivation).get(getProductForAdmin)
 router.route('/status').put(changeNewStatus)
 router
   .route('/:slug')

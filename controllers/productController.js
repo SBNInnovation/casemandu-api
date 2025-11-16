@@ -225,7 +225,7 @@ const getProductBySlug = asyncHandler(async (req, res) => {
 // @desc    Create a product
 // @route   POST /api/products
 // @access  Private/Admin
-const addProduct = asyncHandler(async (req, res) => {
+const createProduct = asyncHandler(async (req,res) => {
   const {
     title,
     image,
@@ -279,13 +279,10 @@ const addProduct = asyncHandler(async (req, res) => {
     description,
     price,
     discount,
-    isNew:true
     // new: isNew,
   });
 
   await product.save();
-
-  console.log(product.createdAt)
 
   return res.status(201).json({
     _id: product._id,
@@ -501,5 +498,5 @@ module.exports = {
   changeActivation,
   changeNewStatus,
   getProductForAdmin,
-  addProduct
+  createProduct
 };
