@@ -17,7 +17,7 @@ const getDashboardData = async (req, res) => {
 
     const totalRevenue = totalRevenueAgg[0]?.totalRevenue || 0;
     const totalOrders = totalRevenueAgg[0]?.totalOrders || 0;
-    const productsDelivered = await Order.countDocuments({ status: "delivered" });
+    const productsDelivered = await Order.countDocuments({});
 
     const statsData = [
       {
@@ -119,12 +119,48 @@ const getDashboardData = async (req, res) => {
       },
     ]);
 
+    const salesByOptionAgg = await Order.aggregate([
+    { $unwind: '$orderItems' },
+    {
+        $lookup: {
+        from: 'products',
+        localField: 'orderItems.name',
+        foreignField: 'title',
+        as: 'product',
+        },
+    },
+    { $unwind: '$product' },
+    {
+        $group: {
+        _id: '$product.option', // Group by option
+        value: { $sum: '$orderItems.price' },
+        },
+    },
+    {
+        $lookup: {
+        from: 'options',          // Join with Option collection
+        localField: '_id',
+        foreignField: '_id',
+        as: 'option',
+        },
+    },
+    { $unwind: '$option' },
+    {
+        $project: {
+        name: '$option.title',   // Option title as name
+        value: 1,
+        },
+    },
+    ]);
+
+
     // ------------------ Final Response ------------------
     res.json({
       stats: statsData,
       orderHistory: orderHistoryDataByYear,
       revenueByMonth: revenueByMonthDataByYear,
       salesByCategory: salesByCategoryAgg,
+      salesByOption: salesByOptionAgg
     });
   } catch (err) {
     console.error(err);
