@@ -131,90 +131,135 @@ async function createEmailTest({ body }) {
     from: "No-reply@casemandu.com.np <no-reply@casemandu.com.np>",
     to: customerEmail,
     subject: "Your Order from Casemandu!",
-    html: `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <style>
-        body {
-          font-family: 'Segoe UI', sans-serif;
-          background-color: #f9f9f9;
-          margin: 0;
-          padding: 0;
-          color: #333;
-        }
-        .container {
-          background-color: #ffffff;
-          max-width: 600px;
-          margin: 40px auto;
-          padding: 30px;
-          border-radius: 8px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        .header {
-          text-align: center;
-          padding-bottom: 20px;
-          border-bottom: 1px solid #eee;
+   html: `
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        font-family: 'Segoe UI', Arial, sans-serif;
+        background: #f5f7fa;
+        margin: 0;
+        padding: 0;
+        color: #444;
+      }
+
+      .container {
+        background: #ffffff;
+        max-width: 650px;
+        margin: 40px auto;
+        padding: 0;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      }
+
+      /* Header */
+      .header {
+        background: linear-gradient(135deg, #d9230f, #a6190c);
+        color: #fff;
+        padding: 35px 20px;
+        text-align: center;
+      }
+      .header h1 {
+        margin: 0;
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+      }
+
+      /* Content Section */
+      .content {
+        padding: 30px 30px;
+        font-size: 16px;
+        line-height: 1.7;
+      }
+
+      .order-box {
+        background: #f8f8f8;
+        border-left: 4px solid #d9230f;
+        padding: 18px;
+        border-radius: 8px;
+        margin: 25px 0;
+        font-size: 15px;
+        font-family: monospace;
+        white-space: pre-wrap;
+      }
+
+      /* Button */
+      .btn {
+        display: inline-block;
+        background: #d9230f;
+        padding: 14px 26px;
+        color: #fff !important;
+        border-radius: 8px;
+        font-size: 15px;
+        font-weight: 600;
+        text-decoration: none;
+        margin-top: 10px;
+        transition: 0.3s ease;
+      }
+      .btn:hover {
+        background: #b71b0c;
+      }
+
+      /* Footer */
+      .footer {
+        text-align: center;
+        font-size: 13px;
+        color: #777;
+        padding: 18px;
+        border-top: 1px solid #eee;
+        background: #fafafa;
+      }
+      .footer a {
+        color: #d9230f;
+        text-decoration: none;
+      }
+
+      @media only screen and (max-width: 600px) {
+        .content {
+          padding: 20px;
         }
         .header h1 {
-          color: #d9230f;
+          font-size: 22px;
         }
-        .content {
-          padding: 20px 0;
-          line-height: 1.6;
-        }
-        .order-details {
-          background-color: #f2f2f2;
-          padding: 15px;
-          border-radius: 6px;
-          margin: 20px 0;
-          font-family: monospace;
-        }
-        .btn {
-          display: inline-block;
-          background-color: #d9230f;
-          color: white;
-          padding: 12px 20px;
-          text-decoration: none;
-          border-radius: 5px;
-          font-weight: bold;
-        }
-        .footer {
-          text-align: center;
-          font-size: 13px;
-          color: #999;
-          margin-top: 40px;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h1>Thank You for Your Order!</h1>
-        </div>
-        <div class="content">
-          <p>Hi there, ${name}</p>
-          <p>We're excited to let you know that your order has been successfully completed.</p>
+      }
+    </style>
+  </head>
 
-          <div class="order-details">
-            <strong>Order Details:</strong><br/>
-            ${orderDetails}
-          </div>
+  <body>
+    <div class="container">
 
-          <p>
-            <strong>Track your order here:</strong><br/>
-            <a href="${TrackingUrl}" class="btn">Track Order</a>
-          </p>
-
-          <p>Thank you for shopping with us at <strong>Casemandu</strong>!</p>
-        </div>
-
-        <div class="footer">
-          &copy; ${new Date().getFullYear()} Casemandu. All rights reserved. Developed by <a href="https://www.mavtech.com.np" target="_blank">Mavtech</a>.
-        </div>
+      <div class="header">
+        <h1>Thank You for Your Order!</h1>
       </div>
-    </body>
-    </html>
+
+      <div class="content">
+        <p>Hi <strong>${name}</strong>,</p>
+        <p>Your order has been successfully completed. We’re preparing everything and will get it to you as soon as possible.</p>
+
+        <div class="order-box">
+          <strong>Order Details:</strong><br/>
+          ${orderDetails}
+        </div>
+
+        <p>
+          <strong>Track your order here:</strong><br/>
+          <a href="${TrackingUrl}" class="btn">Track Your Order</a>
+        </p>
+
+        <p>We truly appreciate your trust in <strong>Casemandu</strong>. You're awesome! ❤️</p>
+      </div>
+
+      <div class="footer">
+        &copy; ${new Date().getFullYear()} Casemandu. All rights reserved.<br/>
+      </div>
+    </div>
+  </body>
+  </html>
   `,
   };
 
