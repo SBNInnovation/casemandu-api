@@ -170,9 +170,6 @@ const getProductForAdmin = async (req, res) => {
   }
 };
 
-
-
-
 // @desc    Get all products by category
 // @route   GET /api/products/category/:slug
 // @access  Public
@@ -225,7 +222,89 @@ const getProductBySlug = asyncHandler(async (req, res) => {
 // @desc    Create a product
 // @route   POST /api/products
 // @access  Private/Admin
-const createProduct = asyncHandler(async (req,res) => {
+// const createProduct = asyncHandler(async (req,res) => {
+//   const {
+//     title,
+//     image,
+//     category,
+//     optionId, // Optional
+//     features,
+//     description,
+//     price,
+//     discount,
+//     // new: isNew,
+//   } = req.body;
+
+//   // Validate category
+//   const categoryExists = await Category.findById(category);
+//   if (!categoryExists) {
+//     res.status(404);
+//     throw new Error("Category not found");
+//     return
+//   }
+
+//   let parsedFeatures;
+//   if(features){
+//     parsedFeatures = JSON.parse(features)
+//     if(parsedFeatures && !Array.isArray(parsedFeatures)){
+//       res.status(404).json({
+//         success:false,
+//         message:"features must be an array"
+//       })
+//       return
+//     }
+//   }
+
+//   // Validate option (optional)
+//   let optionExists = null;
+//   if (optionId) {
+//     optionExists = await Option.findById(optionId);
+//     if (!optionExists) {
+//       res.status(404);
+//       throw new Error("Option not found");
+//     }
+//     return
+//   }
+
+//   const now = new Date();
+
+//   const product = await Product.create({
+//     title,
+//     slug: await createSLUG(Product, title),
+//     image,
+//     category,
+//     option: optionId || undefined,
+//     features: parsedFeatures,
+//     description,
+//     price,
+//     discount,
+//     createdAt: now,
+//     updatedAt: now,
+//   });
+//   // await product.save();
+//   // console.log(product);
+
+
+// const productObj = product.toObject(); // ensures timestamps are included
+
+// return res.status(201).json({
+//   _id: productObj._id,
+//   slug: productObj.slug,
+//   title: productObj.title,
+//   image: productObj.image,
+//   category: productObj.category,
+//   option: productObj.option,
+//   features: productObj.features,
+//   description: productObj.description,
+//   tags: productObj.tags,
+//   price: productObj.price,
+//   discount: productObj.discount,
+//   createdAt: productObj.createdAt,
+//   updatedAt: productObj.updatedAt,
+// });
+// });
+
+const createProduct = asyncHandler(async (req, res) => {
   const {
     title,
     image,
@@ -235,7 +314,6 @@ const createProduct = asyncHandler(async (req,res) => {
     description,
     price,
     discount,
-    // new: isNew,
   } = req.body;
 
   // Validate category
@@ -243,64 +321,54 @@ const createProduct = asyncHandler(async (req,res) => {
   if (!categoryExists) {
     res.status(404);
     throw new Error("Category not found");
-    return
   }
 
+  // Parse features if provided
   let parsedFeatures;
-  if(features){
-    parsedFeatures = JSON.parse(features)
-    if(parsedFeatures && !Array.isArray(parsedFeatures)){
-      res.status(404).json({
-        success:false,
-        message:"features must be an array"
-      })
-      return
+  if (features) {
+    parsedFeatures = JSON.parse(features);
+    if (parsedFeatures && !Array.isArray(parsedFeatures)) {
+      return res.status(400).json({
+        success: false,
+        message: "Features must be an array",
+      });
     }
   }
 
-  // Validate option (optional)
-  let optionExists = null;
+  // Validate option if provided
   if (optionId) {
-    optionExists = await Option.findById(optionId);
+    const optionExists = await Option.findById(optionId);
     if (!optionExists) {
       res.status(404);
       throw new Error("Option not found");
     }
-    return
   }
-
-  const product = new Product({
+  const addProduct = await Product.create({
     title,
     slug: await createSLUG(Product, title),
     image,
     category,
-    option: optionId || undefined,
+    option:optionId,
     features:parsedFeatures,
     description,
     price,
-    discount,
-    // new: isNew,
-  });
+    discount
+  })
 
-  await product.save();
-
-  return res.status(201).json({
-    _id: product._id,
-    slug: product.slug,
-    title: product.title,
-    image: product.image,
-    category: product.category,
-    option: product.option,
-    features:product.features,
-    description: product.description,
-    tags: product.tags,
-    price: product.price,
-    discount: product.discount,
-    createdAt: product.createdAt,
-    updatedAt: product.updatedAt,
-    // new: product.new,
-  });
+  if(!addProduct){
+    res.status(404).json({
+      success:false,
+      message:"Unable to create product"
+    })
+    return
+  }
+  res.status(201).json({
+    success:true,
+    message:"product created",
+    data: addProduct.toObject()
+  })
 });
+
 
 // @desc    Update a product
 // @route   PUT /api/products/:slug
