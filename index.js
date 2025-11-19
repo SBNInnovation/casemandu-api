@@ -26,7 +26,7 @@ const optionRoutes = require("./routes/optionRoutes.js");
 
 // const Product = require("./models/productModel.js");
 const { dashboardRouter } = require("./routes/dashboardRoutes.js");
-const PhoneModel = require("./models/phoneModel.js");
+// const PhoneModel = require("./models/phoneModel.js");
 // const Category = require("./models/categoryModel.js");
 // const serverless = require("serverless-http"); // import
 
@@ -92,23 +92,23 @@ const PORT = process.env.PORT || 5000;
 // })();
 
 // run this after your mongoose connection is ready (e.g., in index.js AFTER connect)
-(async () => {
-  try {
-    const result = await PhoneModel.updateMany(
-      {}, 
-      { $set: { "models.$[].isActivate": true } } // sets isActivate: true for ALL models inside each phone
-    );
+// (async () => {
+//   try {
+//     const result = await PhoneModel.updateMany(
+//       {}, 
+//       { $set: { "models.$[].isActivate": true } } // sets isActivate: true for ALL models inside each phone
+//     );
 
-    console.log("updateMany result:", result);
-    if (result.modifiedCount > 0) {
-      console.log(`✅ Updated ${result.modifiedCount} phones' models to isActivate: true`);
-    } else {
-      console.log("ℹ️ No documents were modified (they may already be true).");
-    }
-  } catch (err) {
-    console.error("❌ Error running updateMany:", err);
-  }
-})();
+//     console.log("updateMany result:", result);
+//     if (result.modifiedCount > 0) {
+//       console.log(`✅ Updated ${result.modifiedCount} phones' models to isActivate: true`);
+//     } else {
+//       console.log("ℹ️ No documents were modified (they may already be true).");
+//     }
+//   } catch (err) {
+//     console.error("❌ Error running updateMany:", err);
+//   }
+// })();
 
 // (async () => {
 //   try {

@@ -17,10 +17,6 @@ const modelSchema = new mongoose.Schema(
         ref: 'CaseType',
       },
     ],
-    isActivate:{
-      type:Boolean,
-      default:false
-    }
   },
   {
     timestamps: true,

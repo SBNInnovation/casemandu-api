@@ -9,12 +9,10 @@ const expressAsyncHandler = require('express-async-handler')
 const getPhones = expressAsyncHandler(async (req, res) => {
   const activation = req.query.activation?.toString(); // "active" or "inactive"
 
-  // 1. Get all phones first
   const phones = await PhoneModel.find()
     .sort({ name: 1 })
     .populate("models.caseTypes", "name price description");
-
-  // 2. If activation filter is applied, filter models inside each phone
+    
   if (activation === "active") {
     phones.forEach(phone => {
       phone.models = phone.models.filter(model => model.isActivate === true);
