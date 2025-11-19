@@ -1,30 +1,30 @@
 const express = require("express");
 const dotenv = require("dotenv");
-const connectDB = require("../config/connectDB.js");
+const connectDB = require("./config/connectDB.js");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 
 // importing middlewares
-const { notFound, errorHandler } = require("../middlewares/errorMiddleware.js");
+const { notFound, errorHandler } = require("./middlewares/errorMiddleware.js");
 
 // Import routes
-const categoryRoutes = require("../routes/categoryRoutes.js");
-const productRoutes = require("../routes/productRoutes.js");
-const orderRoutes = require("../routes/orderRoutes.js");
-const caseTypeRoutes = require("../routes/caseTypeRoutes.js");
-const sliderImageRoutes = require("../routes/sliderImageRoutes.js");
-const customerRoutes = require("../routes/customerRoutes.js");
-const bannerRoutes = require("../routes/bannerRoutes.js");
-const offerRoutes = require("../routes/offerRoutes.js");
-const userRoutes = require("../routes/userRoutes.js");
-const promocodeRoutes = require("../routes/promocodeRoute.js");
-const phoneRoutes = require("../routes/phoneRoutes.js");
-const pinterestRoute = require("../routes/pinterestRoutes.js");
-const emailTest = require("../routes/ConfirmEmail.js");
-const aiRoutes = require("../routes/aiRoute.js");
-const optionRoutes = require("../routes/optionRoutes.js");
+const categoryRoutes = require("./routes/categoryRoutes.js");
+const productRoutes = require("./routes/productRoutes.js");
+const orderRoutes = require("./routes/orderRoutes.js");
+const caseTypeRoutes = require("./routes/caseTypeRoutes.js");
+const sliderImageRoutes = require("./routes/sliderImageRoutes.js");
+const customerRoutes = require("./routes/customerRoutes.js");
+const bannerRoutes = require("./routes/bannerRoutes.js");
+const offerRoutes = require("./routes/offerRoutes.js");
+const userRoutes = require("./routes/userRoutes.js");
+const promocodeRoutes = require("./routes/promocodeRoute.js");
+const phoneRoutes = require("./routes/phoneRoutes.js");
+const pinterestRoute = require("./routes/pinterestRoutes.js");
+const emailTest = require("./routes/ConfirmEmail.js");
+const aiRoutes = require("./routes/aiRoute.js");
+const optionRoutes = require("./routes/optionRoutes.js");
 // const Product = require("./models/productModel.js");
-const { dashboardRouter } = require("../routes/dashboardRoutes.js");
+const { dashboardRouter } = require("./routes/dashboardRoutes.js");
 // const Category = require("./models/categoryModel.js");
 const serverless = require("serverless-http"); // import
 
