@@ -7,17 +7,30 @@ const expressAsyncHandler = require('express-async-handler')
 // @access Public
 
 const getPhones = expressAsyncHandler(async (req, res) => {
-  const phones = await PhoneModel.find({})
+  const activation = req.query.activation?.toString(); // "active" or "inactive"
+
+  // 1. Get all phones first
+  const phones = await PhoneModel.find()
     .sort({ name: 1 })
-    .populate('models.caseTypes', 'name price description')
+    .populate("models.caseTypes", "name price description");
 
-  //   sort phone models array by name in ascending order
-  phones.forEach((phone) => {
-    phone.models.sort((a, b) => a.name.localeCompare(b.name))
-  })
+  // 2. If activation filter is applied, filter models inside each phone
+  if (activation === "active") {
+    phones.forEach(phone => {
+      phone.models = phone.models.filter(model => model.isActivate === true);
+    });
+  } else if (activation === "inactive") {
+    phones.forEach(phone => {
+      phone.models = phone.models.filter(model => model.isActivate === false);
+    });
+  }
 
-  res.json(phones)
-})
+  // 3. Optional: remove phones that have no models left after filtering
+  // const filteredPhones = phones.filter(phone => phone.models.length > 0);
+
+  res.json(phones);
+});
+
 
 // @desc   Fetch all phone brands
 // @route  GET /api/phones/brands
@@ -318,6 +331,55 @@ const getModelByID = expressAsyncHandler(async (req, res) => {
   res.json(modelObject)
 })
 
+const changeStatus = async(req,res)=>{
+try {
+    const { id } = req.query;
+    const { activation } = req.body;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Model Id is required",
+      });
+    }
+
+    // validation
+    if (activation !== "active" && activation !== "inactive") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid activation value. Use 'active' or 'inactive'.",
+      });
+    }
+
+    const isActivate = activation === "active";
+
+    const updated = await PhoneModel.findByIdAndUpdate(
+      id,
+      { isActivate },
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({
+        success: false,
+        message: "Model not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: isActivate ? "Activated" : "Deactivated",
+      data: updated
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+
 module.exports = {
   getPhones,
   getPhoneBrands,
@@ -331,4 +393,5 @@ module.exports = {
   getModelsByBrand,
   getModelByID,
   updatePhoneModelCustomize,
+  changeStatus
 }

@@ -23,8 +23,10 @@ const pinterestRoute = require("./routes/pinterestRoutes.js");
 const emailTest = require("./routes/ConfirmEmail.js");
 const aiRoutes = require("./routes/aiRoute.js");
 const optionRoutes = require("./routes/optionRoutes.js");
+
 // const Product = require("./models/productModel.js");
 const { dashboardRouter } = require("./routes/dashboardRoutes.js");
+// const PhoneModel = require("./models/phoneModel.js");
 // const Category = require("./models/categoryModel.js");
 // const serverless = require("serverless-http"); // import
 
@@ -92,7 +94,7 @@ const PORT = process.env.PORT || 5000;
 // run this after your mongoose connection is ready (e.g., in index.js AFTER connect)
 // (async () => {
 //   try {
-//     const result = await Product.updateMany({}, { $set: { isActivate: true } });
+//     const result = await PhoneModel.updateMany({}, { $set: { isActivate: true } });
 //     console.log("updateMany result:", result);
 //     // result has fields like acknowledged, matchedCount, modifiedCount
 //     if (result.modifiedCount > 0) {

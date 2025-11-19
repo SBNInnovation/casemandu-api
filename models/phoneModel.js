@@ -40,6 +40,10 @@ const phoneSchema = new mongoose.Schema(
         },
       },
     ],
+      isActivate:{
+      type:Boolean,
+      default:true
+    }
   },
   {
     timestamps: true,
