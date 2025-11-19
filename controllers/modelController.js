@@ -7,7 +7,15 @@ const Brand = require('../models/brandModel')
 // access:  public
 
 const getModels = asyncHandler(async (req, res) => {
-  const models = await Model.find({})
+  const activation = req.query.activation?.toString();
+  let query = {}
+  if(activation === "active"){
+    query.isActivate = true;
+  }else if(activation === "inactive"){
+    query.isActivate = false
+  }
+
+  const models = await Model.find(query)
     .populate('brand', 'title')
     .populate('caseTypes', 'name price')
     .sort({ title: 1 })
@@ -104,10 +112,60 @@ const updateModel = asyncHandler(async (req, res) => {
   }
 })
 
+const changeStatus = async(req,res)=>{
+try {
+    const { id } = req.query;
+    const { activation } = req.body;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Model Id is required",
+      });
+    }
+
+    // validation
+    if (activation !== "active" && activation !== "inactive") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid activation value. Use 'active' or 'inactive'.",
+      });
+    }
+
+    const isActivate = activation === "active";
+
+    const updated = await Model.findByIdAndUpdate(
+      id,
+      { isActivate },
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({
+        success: false,
+        message: "Model not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: isActivate ? "Activated" : "Deactivated",
+      data: updated
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+
 module.exports = {
   getModels,
   getModelsByBrand,
   createModel,
   updateModel,
   deleteModel,
+  changeStatus
 }
