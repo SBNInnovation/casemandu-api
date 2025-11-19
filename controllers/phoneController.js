@@ -329,19 +329,72 @@ const getModelByID = expressAsyncHandler(async (req, res) => {
   res.json(modelObject)
 })
 
-const changeStatus = async(req,res)=>{
-try {
-    const { id } = req.query;
+// const changeStatus = async(req,res)=>{
+// try {
+//     const { id } = req.query;
+//     const { activation } = req.body;
+
+//     if (!id) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Model Id is required",
+//       });
+//     }
+
+//     // validation
+//     if (activation !== "active" && activation !== "inactive") {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid activation value. Use 'active' or 'inactive'.",
+//       });
+//     }
+
+//     const isActivate = activation === "active";
+
+//     const findModels = await PhoneModel.findOne({models._id:id})
+//     if(findModels){
+//       findModels.model.isActivate = true;
+//       await findModels.save();
+//     }
+//     // const updated = await PhoneModel.findByIdAndUpdate(
+//     //   id,
+//     //   { isActivate },
+//     //   { new: true }
+//     // );
+
+//     if (!findModels) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Model not found",
+//       });
+//     }
+
+//     return res.status(200).json({
+//       success: true,
+//       message: isActivate ? "Activated" : "Deactivated",
+//       data: updated
+//     });
+
+//   } catch (error) {
+//     return res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// }
+
+const changeStatus = async (req, res) => {
+  try {
+    const { id } = req.query; // id of the model inside models array
     const { activation } = req.body;
 
     if (!id) {
       return res.status(400).json({
         success: false,
-        message: "Model Id is required",
+        message: "Model ID is required",
       });
     }
 
-    // validation
     if (activation !== "active" && activation !== "inactive") {
       return res.status(400).json({
         success: false,
@@ -351,32 +404,34 @@ try {
 
     const isActivate = activation === "active";
 
-    const updated = await PhoneModel.findByIdAndUpdate(
-      id,
-      { isActivate },
-      { new: true }
-    );
-
-    if (!updated) {
+    // Find the phone that contains the model
+    const phone = await PhoneModel.findOne({ "models._id": id });
+    if (!phone) {
       return res.status(404).json({
         success: false,
         message: "Model not found",
       });
     }
 
+    // Find the model inside the array
+    const model = phone.models.id(id);
+    model.isActivate = isActivate;
+
+    await phone.save();
+
     return res.status(200).json({
       success: true,
       message: isActivate ? "Activated" : "Deactivated",
-      data: updated
+      data: model,
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
-}
+};
+
 
 module.exports = {
   getPhones,
