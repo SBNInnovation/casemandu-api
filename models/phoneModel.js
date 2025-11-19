@@ -38,12 +38,12 @@ const phoneSchema = new mongoose.Schema(
             default: 0,
           },
         },
+        isActivate:{
+        type:Boolean,
+        default:true
+    }
       },
     ],
-      isActivate:{
-      type:Boolean,
-      default:true
-    }
   },
   {
     timestamps: true,
