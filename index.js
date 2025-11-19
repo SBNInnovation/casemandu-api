@@ -147,7 +147,8 @@ const PORT = process.env.PORT || 5000;
 // });
 
 // Export for Vercel
-module.exports = app;
+// module.exports = app;
+// module.exports.handler = serverless(app);
 module.exports.handler = serverless(app);
 
  // "node": "18.x"
