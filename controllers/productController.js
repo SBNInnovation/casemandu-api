@@ -3,6 +3,8 @@ const Category = require("../models/categoryModel");
 const Option = require("../models/optionModels"); // Import Option model
 const asyncHandler = require("express-async-handler");
 const createSLUG = require("../utils/createSLUG");
+const sharp = require("sharp");
+const { uploadToCloudinary, deleteFile } = require("../utils/cloudinary");
 
 // @desc    Get all products
 // @route   GET /api/products
@@ -307,14 +309,36 @@ const getProductBySlug = asyncHandler(async (req, res) => {
 const createProduct = asyncHandler(async (req, res) => {
   const {
     title,
-    image,
     category,
-    optionId, // Optional
+    optionId,
     features,
     description,
     price,
     discount,
   } = req.body;
+
+  const image = req.file;
+  // console.log(req.file)
+
+  if (!image) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Please upload the photo." });
+  }
+
+  // Compress + convert to webp
+  const optimizedBuffer = await sharp(image.buffer)
+    .webp({ quality: 80 })
+    .toBuffer();
+
+  const base64Data = `data:image/webp;base64,${optimizedBuffer.toString("base64")}`;
+
+  // Upload to Cloudinary
+  const uploaded = await uploadToCloudinary(
+    base64Data,
+    "products"
+  );
+  // const uploaded = { secure_url: "https://via.placeholder.com/150" };
 
   // Validate category
   const categoryExists = await Category.findById(category);
@@ -323,19 +347,27 @@ const createProduct = asyncHandler(async (req, res) => {
     throw new Error("Category not found");
   }
 
-  // Parse features if provided
-  let parsedFeatures;
+  // Validate features (optional)
+  let parsedFeatures = undefined;
   if (features) {
-    parsedFeatures = JSON.parse(features);
-    if (parsedFeatures && !Array.isArray(parsedFeatures)) {
+    try {
+      parsedFeatures = JSON.parse(features);
+
+      if (!Array.isArray(parsedFeatures)) {
+        return res.status(400).json({
+          success: false,
+          message: "Features must be an array",
+        });
+      }
+    } catch (e) {
       return res.status(400).json({
         success: false,
-        message: "Features must be an array",
+        message: "Invalid JSON format for features",
       });
     }
   }
 
-  // Validate option if provided
+  // Validate optionId (optional)
   if (optionId) {
     const optionExists = await Option.findById(optionId);
     if (!optionExists) {
@@ -343,32 +375,33 @@ const createProduct = asyncHandler(async (req, res) => {
       throw new Error("Option not found");
     }
   }
+
+  // Save product
   const addProduct = await Product.create({
     title,
     slug: await createSLUG(Product, title),
-    image,
+    image: uploaded.secure_url,
     category,
-    option:optionId,
-    features:parsedFeatures,
+    option: optionId,
+    features: parsedFeatures,
     description,
     price,
-    discount
-  })
+    discount,
+  });
 
-  if(!addProduct){
-    res.status(404).json({
-      success:false,
-      message:"Unable to create product"
-    })
-    return
+  if (!addProduct) {
+    return res.status(500).json({
+      success: false,
+      message: "Unable to create product",
+    });
   }
-  res.status(201).json({
-    success:true,
-    message:"product created",
-    data: addProduct.toObject()
-  })
-});
 
+  res.status(201).json({
+    success: true,
+    message: "Product created successfully",
+    data: addProduct.toObject(),
+  });
+});
 
 // @desc    Update a product
 // @route   PUT /api/products/:slug
@@ -376,7 +409,7 @@ const createProduct = asyncHandler(async (req, res) => {
 const updateProduct = asyncHandler(async (req, res) => {
   const {
     title,
-    image,
+    // image,
     category,
     tags,
     optionId, // Optional
@@ -387,11 +420,30 @@ const updateProduct = asyncHandler(async (req, res) => {
     // new: isNew,
   } = req.body;
 
+  const image = req.file;
+  // console.log(req.file)
+
   const product = await Product.findOne({ slug: req.params.slug });
 
   if (!product) {
     res.status(404);
     throw new Error("Product not found");
+  }
+
+  let base64Data, uploaded;
+  if(image.length > 0){
+     // Compress + convert to webp
+    const optimizedBuffer = await sharp(image.buffer)
+      .webp({ quality: 80 })
+      .toBuffer();
+
+    base64Data = `data:image/webp;base64,${optimizedBuffer.toString("base64")}`;
+
+    // Upload to Cloudinary
+    uploaded = await uploadToCloudinary(
+      base64Data,
+      "products"
+    );
   }
 
    let parsedFeatures;
@@ -417,7 +469,7 @@ const updateProduct = asyncHandler(async (req, res) => {
 
   product.title = title || product.title;
   product.slug = (title && (await createSLUG(Product, title))) || product.slug;
-  product.image = image || product.image;
+  product.image = image.secure_url || product.image;
   product.category = category || product.category;
   product.tags = tags || product.tags;
   product.features = (parsedFeatures || product.features)
@@ -456,6 +508,8 @@ const deleteProduct = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error("Product not found");
   }
+
+  await deleteFile(product.image)
 
   await product.deleteOne();
 
