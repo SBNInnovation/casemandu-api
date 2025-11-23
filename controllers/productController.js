@@ -409,19 +409,16 @@ const createProduct = asyncHandler(async (req, res) => {
 const updateProduct = asyncHandler(async (req, res) => {
   const {
     title,
-    // image,
     category,
     tags,
-    optionId, // Optional
+    optionId,
     features,
     description,
     price,
     discount,
-    // new: isNew,
   } = req.body;
 
   const image = req.file;
-  // console.log(req.file)
 
   const product = await Product.findOne({ slug: req.params.slug });
 
@@ -430,34 +427,31 @@ const updateProduct = asyncHandler(async (req, res) => {
     throw new Error("Product not found");
   }
 
-  let base64Data, uploaded;
-  if(image.length > 0){
-     // Compress + convert to webp
+  let uploaded, base64Data;
+
+  if (image) {
     const optimizedBuffer = await sharp(image.buffer)
       .webp({ quality: 80 })
       .toBuffer();
 
     base64Data = `data:image/webp;base64,${optimizedBuffer.toString("base64")}`;
 
-    // Upload to Cloudinary
-    uploaded = await uploadToCloudinary(
-      base64Data,
-      "products"
-    );
+    uploaded = await uploadToCloudinary(base64Data, "products");
   }
 
-   let parsedFeatures;
-  if(features){
-    parsedFeatures = JSON.parse(features)
-    if(parsedFeatures && !Array.isArray(parsedFeatures)){
-      res.status(404).json({
-        success:false,
-        message:"features must be an array"
-      })
+  let parsedFeatures;
+  if (features) {
+    parsedFeatures = JSON.parse(features);
+
+    if (!Array.isArray(parsedFeatures)) {
+      return res.status(400).json({
+        success: false,
+        message: "features must be an array",
+      });
     }
   }
 
-  // Option check (if provided)
+  // ✔ Option check
   if (optionId) {
     const optionExists = await Option.findById(optionId);
     if (!optionExists) {
@@ -468,15 +462,16 @@ const updateProduct = asyncHandler(async (req, res) => {
   }
 
   product.title = title || product.title;
-  product.slug = (title && (await createSLUG(Product, title))) || product.slug;
-  product.image = image.secure_url || product.image;
+  product.slug =
+    (title && (await createSLUG(Product, title))) || product.slug;
+  product.image = uploaded?.secure_url || product.image;
+
   product.category = category || product.category;
   product.tags = tags || product.tags;
-  product.features = (parsedFeatures || product.features)
+  product.features = parsedFeatures || product.features;
   product.description = description || product.description;
   product.price = price || product.price;
   product.discount = discount || product.discount;
-  // product.new = isNew || product.new;
 
   const updatedProduct = await product.save();
 
@@ -492,11 +487,11 @@ const updateProduct = asyncHandler(async (req, res) => {
     description: updatedProduct.description,
     price: updatedProduct.price,
     discount: updatedProduct.discount,
-    createdAt: product.createdAt,
-    updatedAt: product.updatedAt,
-    // new: updatedProduct.new,
+    createdAt: updatedProduct.createdAt,
+    updatedAt: updatedProduct.updatedAt,
   });
 });
+
 
 // @desc    Delete a product
 // @route   DELETE /api/products/:slug

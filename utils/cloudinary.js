@@ -29,51 +29,6 @@ if (
   process.exit(1);
 }
 
-// const uploadToCloudinary = (buffer, folder) => {
-//   return new Promise((resolve, reject) => {
-//     const uploadStream = cloudinary.uploader.upload_stream(
-//       {
-//         folder: `Casemandu/${folder}`,
-//         resource_type: "image",
-//       },
-//       (error, result) => {
-//         if (error) return reject(error);
-//         resolve(result);
-//       }
-//     );
-
-//     streamifier.createReadStream(buffer).pipe(uploadStream);
-//   });
-// };
-
-
-// const uploadToCloudinary = (buffer, folder) => {
-//   return new Promise((resolve, reject) => {
-//     const timeout = setTimeout(() => {
-//       reject(new Error("Cloudinary upload timed out"));
-//     }, 10000); // 10 sec
-
-//     const uploadStream = cloudinary.uploader.upload(
-//       {
-//         folder: `Casemandu/${folder}`,
-//         resource_type: "image",
-//         format: "webp",
-//       },
-//       (error, result) => {
-//         clearTimeout(timeout);
-//         if (error) {
-//           console.log("Cloudinary Error:", error);
-//           return reject(error);
-//         }
-//         resolve(result);
-//       }
-//     );
-
-//     const stream = streamifier.createReadStream(buffer);
-//     stream.pipe(uploadStream);
-//   });
-// };
-
 
 const uploadToCloudinary = async (base64String, folder) => {
   try {
