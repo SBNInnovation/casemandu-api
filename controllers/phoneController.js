@@ -262,7 +262,7 @@ const updatePhoneModelCustomize = expressAsyncHandler(async (req, res) => {
   let uploaded;
 
   // If an image was uploaded → optimize + upload to cloudinary
-  if (templateImg) {
+  if (templateImg && templateImg != "") {
     const optimizedBuffer = await sharp(templateImg.buffer)
       .webp({ quality: 80 })
       .toBuffer();
