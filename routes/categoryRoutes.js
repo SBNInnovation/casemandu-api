@@ -6,16 +6,25 @@ const {
   updateCategory,
   deleteCategory,
 } = require('../controllers/categoryController')
+const multer =require("multer")
 
 const router = express.Router()
 
-router.route('/').get(getCategory).post(createCategory)
+const storage= multer.memoryStorage();
 
+const uploader = multer({storage});
+
+
+router.post("/",uploader.single("image"),createCategory)
+router.route('/').get(getCategory)
+
+
+router.put("/:id",uploader.single("image"),updateCategory)
 router
   .route('/:id')
   .get(getCategoryById)
-  .put(updateCategory)
   .delete(deleteCategory)
+
 
 
 module.exports = router
