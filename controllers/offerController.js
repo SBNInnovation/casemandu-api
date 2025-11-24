@@ -4,6 +4,8 @@ const Model = require('../models/modelModel')
 const Brand = require('../models/brandModel')
 const asyncHandler = require('express-async-handler')
 const createSLUG = require('../utils/createSLUG')
+const { uploadToCloudinary, deleteFile } = require('../utils/cloudinary')
+const sharp = require("sharp")
 
 // desc:    Get all offers
 // route:   GET /api/offers
@@ -46,13 +48,34 @@ const getOfferBySlug = asyncHandler(async (req, res) => {
 // access:  private/admin
 
 const createOffer = asyncHandler(async (req, res) => {
-  const { title, image, category, description, price, discount, models } =
-    req.body
+  const { title, category, description, price, discount, models } =
+    req.body;
+
+  const {image} = req.file;
+
+   if (!image) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Please upload the photo." });
+      }
+    
+      // Compress + convert to webp
+      const optimizedBuffer = await sharp(image.buffer)
+        .webp({ quality: 80 })
+        .toBuffer();
+    
+      const base64Data = `data:image/webp;base64,${optimizedBuffer.toString("base64")}`;
+    
+      // Upload to Cloudinary
+      const uploaded = await uploadToCloudinary(
+        base64Data,
+        "options"
+      );
 
   const offer = new Offer({
     title,
     slug: await createSLUG(Offer, title),
-    image,
+    image:uploaded?.secure_url,
     category,
     description,
     price,
@@ -85,15 +108,29 @@ const createOffer = asyncHandler(async (req, res) => {
 // access:  private/admin
 
 const updateOffer = asyncHandler(async (req, res) => {
-  const { title, image, category, description, price, discount, models } =
-    req.body
+  const { title, category, description, price, discount, models } =
+    req.body;
+
+  const {image} = req.file;
 
   const offer = await Offer.findOne({ slug: req.params.slug })
+
+   let uploaded, base64Data;
+      
+        if (image) {
+          const optimizedBuffer = await sharp(image.buffer)
+            .webp({ quality: 80 })
+            .toBuffer();
+      
+          base64Data = `data:image/webp;base64,${optimizedBuffer.toString("base64")}`;
+      
+          uploaded = await uploadToCloudinary(base64Data, "products");
+        }
 
   if (offer) {
     offer.title = title || offer.title
     offer.slug = (title && (await createSLUG(Offer, title))) || offer.slug
-    offer.image = image || offer.image
+    offer.image = uploaded?.secure_url || offer.image
     offer.category = category || offer.category
     offer.description = description || offer.description
     offer.price = price || offer.price
@@ -133,6 +170,7 @@ const deleteOffer = asyncHandler(async (req, res) => {
   }
 
   await offer.deleteOne({ slug: offerSlug })
+  await deleteFile(offer.image)
   res.json({ message: 'Offer deleted' })
 })
 

@@ -141,7 +141,7 @@ const createCategory = asyncHandler(async (req, res) => {
     slug:slug1,
     description,
     image:uploaded?.secure_url,
-    delete_url
+    // delete_url
   });
 
   res.status(201).json({
