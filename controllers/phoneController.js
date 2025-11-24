@@ -1,6 +1,8 @@
 const PhoneModel = require('../models/phoneModel')
 const Customize = require('../models/customizeModel')
-const expressAsyncHandler = require('express-async-handler')
+const expressAsyncHandler = require('express-async-handler');
+const { uploadToCloudinary } = require('../utils/cloudinary');
+const sharp = require("sharp");
 
 // @desc   Fetch all phones
 // @route  GET /api/phones
@@ -253,10 +255,24 @@ const updatePhoneModelCustomize = expressAsyncHandler(async (req, res) => {
     throw new Error('Model not found')
   }
 
-  const { price, templateImg, ratio } = req.body
+  const { price, ratio } = req.body
+
+  const templateImg = req.file;
+
+  let uploaded, base64Data;
+    
+      if (templateImg) {
+        const optimizedBuffer = await sharp(image.buffer)
+          .webp({ quality: 80 })
+          .toBuffer();
+    
+        base64Data = `data:image/webp;base64,${optimizedBuffer.toString("base64")}`;
+    
+        uploaded = await uploadToCloudinary(base64Data, "products");
+      }
 
   model.price = price || model.price
-  model.templateImg = templateImg
+  model.templateImg = uploaded?.secure_url || model.templateImg
   model.ratio = ratio || model.ratio
 
   await phone.save()

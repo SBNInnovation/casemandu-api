@@ -4,6 +4,8 @@
 
 const asyncHandler = require('express-async-handler')
 const Customize = require('../models/customizeModel.js')
+const sharp = require("sharp")
+const { uploadToCloudinary, deleteFile } = require('../utils/cloudinary.js')
 
 const getCustomize = asyncHandler(async (req, res) => {
   const customize = await Customize.find({})
@@ -18,12 +20,33 @@ const getCustomize = asyncHandler(async (req, res) => {
 // access: private/admin
 
 const createCustomize = asyncHandler(async (req, res) => {
-  const { model, category, templateImg, ratio, price } = req.body
+  const { model, category, ratio, price } = req.body;
+
+  const templateImg = req.file;
+
+  if (!templateImg) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Please upload the photo." });
+  }
+
+    // Compress + convert to webp
+    const optimizedBuffer = await sharp(templateImg.buffer)
+      .webp({ quality: 80 })
+      .toBuffer();
+  
+    const base64Data = `data:image/webp;base64,${optimizedBuffer.toString("base64")}`;
+  
+    // Upload to Cloudinary
+    const uploaded = await uploadToCloudinary(
+      base64Data,
+      "customize"
+    );
 
   const customize = new Customize({
     model,
     category,
-    templateImg,
+    templateImg:uploaded.secure_url,
     ratio,
     price,
   })
@@ -67,14 +90,27 @@ const getCustomizeById = asyncHandler(async (req, res) => {
 // access: private/admin
 
 const updateCustomize = asyncHandler(async (req, res) => {
-  const { model, category, templateImg, ratio, price } = req.body
+  const { model, category,ratio, price } = req.body
+
+  const templateImg = req.file;
 
   const customize = await Customize.findById(req.params.id)
+  let uploaded, base64Data;
+  
+    if (templateImg) {
+      const optimizedBuffer = await sharp(image.buffer)
+        .webp({ quality: 80 })
+        .toBuffer();
+  
+      base64Data = `data:image/webp;base64,${optimizedBuffer.toString("base64")}`;
+  
+      uploaded = await uploadToCloudinary(base64Data, "products");
+    }
 
   if (customize) {
     customize.model = model || customize.model
     customize.category = category || customize.category
-    customize.templateImg = templateImg || customize.templateImg
+    customize.templateImg = uploaded?.secure_url || customize.templateImg
     customize.ratio = ratio || customize.ratio
     customize.price = price || customize.price
 
@@ -95,6 +131,7 @@ const deleteCustomize = asyncHandler(async (req, res) => {
   const customize = await Customize.findById(req.params.id)
 
   if (customize) {
+    await deleteFile(customize.templateImg)
     await customize.deleteOne()
     res.status(200).json({ message: 'Customize removed' })
   } else {
