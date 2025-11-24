@@ -3,6 +3,7 @@ const Customize = require('../models/customizeModel')
 const expressAsyncHandler = require('express-async-handler');
 const { uploadToCloudinary, deleteFile } = require('../utils/cloudinary');
 const sharp = require("sharp");
+const { model } = require('mongoose');
 
 // @desc   Fetch all phones
 // @route  GET /api/phones
@@ -233,7 +234,7 @@ const updatePhoneModel = expressAsyncHandler(async (req, res) => {
   res.status(200).json({
     message: 'Phone model updated',
   })
-})
+}) 
 
 // @desc  Update a phone model customize
 // @route PUT /api/phones/models/customize/:id
@@ -290,6 +291,53 @@ const updatePhoneModelCustomize = expressAsyncHandler(async (req, res) => {
   });
 });
 
+const deletePhoneModelCustomize = async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const checkPhone = await PhoneModel.findById(id);
+    if (!checkPhone) {
+      return res.status(400).json({
+        success: false,
+        message: "Phone not found",
+      });
+    }
+
+    const { modelID } = req.query;
+
+    const checkModel = checkPhone.models.find(
+      (model) => String(model._id) === modelID
+    );
+
+    if (!checkModel) {
+      return res.status(400).json({
+        success: false,
+        message: "Model not found",
+      });
+    }
+
+    // remove the model
+    checkPhone.models = checkPhone.models.filter(
+      (model) => String(model._id) !== modelID
+    );
+
+    await checkPhone.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Model deleted successfully",
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
+
 
 // @desc Delete a phone
 // @route DELETE /api/phones/:id
@@ -319,7 +367,7 @@ const deleteBrand = expressAsyncHandler(async (req, res) => {
 })
 
 // @desc Get a phone by ID
-// @route GET /api/phones/:id
+// @route ObjectGET /api/phones/:id
 // @access Public
 
 const getBrandsById = expressAsyncHandler(async (req, res) => {
@@ -473,5 +521,6 @@ module.exports = {
   getModelsByBrand,
   getModelByID,
   updatePhoneModelCustomize,
-  changeStatus
+  changeStatus,
+  deletePhoneModelCustomize
 }

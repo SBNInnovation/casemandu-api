@@ -12,6 +12,7 @@ const {
   updatePhoneModelCustomize,
   getModelByID,
   changeStatus,
+  deletePhoneModelCustomize,
 } = require('../controllers/phoneController')
 const { protect, admin } = require('../middlewares/authMiddleware')
 const multer = require("multer");
@@ -33,6 +34,7 @@ router
 
 router
   .put('/models/customize/:id', uploader.single("templateImg"), protect, admin, updatePhoneModelCustomize)
+  .delete("/models/customize/:id",deletePhoneModelCustomize)
 
 router
   .route('/models/:id')
