@@ -272,10 +272,15 @@ const updatePhoneModelCustomize = expressAsyncHandler(async (req, res) => {
     uploaded = await uploadToCloudinary(base64Data, "customize");
   }
 
+  let parsedRatio;
+  if(ratio){
+    parsedRatio = JSON.parse(ratio)
+  }
+
   // Update fields only if provided
   if (price !== undefined) model.price = price;
   if (name !== undefined) model.name = name;
-  if (ratio !== undefined) model.ratio = ratio;
+  if (ratio !== undefined) model.ratio = parsedRatio;
   if (uploaded?.secure_url) model.templateImg = uploaded.secure_url;
 
   await phone.save();
