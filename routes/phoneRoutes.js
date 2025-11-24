@@ -14,8 +14,13 @@ const {
   changeStatus,
 } = require('../controllers/phoneController')
 const { protect, admin } = require('../middlewares/authMiddleware')
+const multer = require("multer");
 
 const router = express.Router()
+
+const storage= multer.memoryStorage();
+
+const uploader = multer({storage});
 
 router.route('/').get(getPhones).patch(changeStatus)
 router.route('/brands').get(getPhoneBrands).post(protect, admin, createBrand)
@@ -27,8 +32,7 @@ router
   .post(protect, admin, insertPhoneModel)
 
 router
-  .route('/models/customize/:id')
-  .put(protect, admin, updatePhoneModelCustomize)
+  .put('/models/customize/:id', uploader.single("templateImg"), protect, admin, updatePhoneModelCustomize)
 
 router
   .route('/models/:id')

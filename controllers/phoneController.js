@@ -240,47 +240,51 @@ const updatePhoneModel = expressAsyncHandler(async (req, res) => {
 // @access Private/Admin
 
 const updatePhoneModelCustomize = expressAsyncHandler(async (req, res) => {
-  const phone = await PhoneModel.findById(req.params.id)
+  const phone = await PhoneModel.findById(req.params.id);
 
   if (!phone) {
-    res.status(404)
-    throw new Error('Phone not found')
+    res.status(404);
+    throw new Error('Phone not found');
   }
+
   const model = phone.models.find(
     (model) => String(model._id) === req.query.modelID
-  )
+  );
 
   if (!model) {
-    res.status(404)
-    throw new Error('Model not found')
+    res.status(404);
+    throw new Error('Model not found');
   }
 
-  const { price, ratio } = req.body
-
+  const { price, ratio, name } = req.body;
   const templateImg = req.file;
 
-  let uploaded, base64Data;
-    
-      if (templateImg) {
-        const optimizedBuffer = await sharp(image.buffer)
-          .webp({ quality: 80 })
-          .toBuffer();
-    
-        base64Data = `data:image/webp;base64,${optimizedBuffer.toString("base64")}`;
-    
-        uploaded = await uploadToCloudinary(base64Data, "products");
-      }
+  let uploaded;
 
-  model.price = price || model.price
-  model.templateImg = uploaded?.secure_url || model.templateImg
-  model.ratio = ratio || model.ratio
+  // If an image was uploaded → optimize + upload to cloudinary
+  if (templateImg) {
+    const optimizedBuffer = await sharp(templateImg.buffer)
+      .webp({ quality: 80 })
+      .toBuffer();
 
-  await phone.save()
+    const base64Data = `data:image/webp;base64,${optimizedBuffer.toString("base64")}`;
+
+    uploaded = await uploadToCloudinary(base64Data, "customize");
+  }
+
+  // Update fields only if provided
+  if (price !== undefined) model.price = price;
+  if (name !== undefined) model.name = name;
+  if (ratio !== undefined) model.ratio = ratio;
+  if (uploaded?.secure_url) model.templateImg = uploaded.secure_url;
+
+  await phone.save();
 
   res.status(200).json({
     message: 'Phone model updated',
-  })
-})
+  });
+});
+
 
 // @desc Delete a phone
 // @route DELETE /api/phones/:id
