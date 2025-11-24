@@ -116,7 +116,7 @@ const updateOption = asyncHandler(async (req, res) => {
     option.name = name || option.name;
     option.route = route || option.route;
     option.image = uploaded?.secure_url || option.image;
-    option.delete_url = delete_url || option.delete_url;
+    // option.delete_url = delete_url || option.delete_url;
 
     const updatedOption = await option.save();
     res.json({success:true, message:"Updated successfully", data:updatedOption});
