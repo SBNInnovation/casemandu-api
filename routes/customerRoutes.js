@@ -5,10 +5,13 @@ const {
   updateCustomer,
   deleteCustomer,
 } = require('../controllers/customerController')
-
+const multer = require("multer")
 const router = express.Router()
-
-router.route('/').get(getCustomer).post(createCustomer)
-router.route('/:id').put(updateCustomer).delete(deleteCustomer)
+const storage = multer.memoryStorage()
+const uploader = multer(storage)
+router.post("/",uploader.single("image"),createCustomer)
+router.route('/').get(getCustomer)
+router.put("/:id",uploader.single("image"),updateCustomer)
+router.route('/:id').delete(deleteCustomer)
 
 module.exports = router

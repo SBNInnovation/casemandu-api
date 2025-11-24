@@ -1,5 +1,7 @@
 const asyncHandler = require('express-async-handler')
 const Customer = require('../models/customerModel.js')
+const { uploadToCloudinary, deleteFile } = require('../utils/cloudinary.js')
+const sharp = require("sharp")
 
 // desc:    Get all customers
 // route:   GET /api/customers
@@ -16,10 +18,31 @@ const getCustomer = asyncHandler(async (req, res) => {
 // access: private/admin
 
 const createCustomer = asyncHandler(async (req, res) => {
-  const { image, link } = req.body
+  const { link } = req.body
+
+  const {image} = req.file
+
+    if (!image) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Please upload the photo." });
+      }
+    
+      // Compress + convert to webp
+      const optimizedBuffer = await sharp(image.buffer)
+        .webp({ quality: 80 })
+        .toBuffer();
+    
+      const base64Data = `data:image/webp;base64,${optimizedBuffer.toString("base64")}`;
+    
+      // Upload to Cloudinary
+      const uploaded = await uploadToCloudinary(
+        base64Data,
+        "options"
+      );
 
   const customer = new Customer({
-    image,
+    image:uploaded?.secure_url,
     link,
   })
 
@@ -42,7 +65,15 @@ const createCustomer = asyncHandler(async (req, res) => {
 // access: private/admin
 
 const deleteCustomer = asyncHandler(async (req, res) => {
+  const checkCustomer = await Customer.findById(req.params.id);
+  if(!checkCustomer){
+    res.status(400).json({
+      success:false,
+      message:"Customer not find"
+    })
+  }
   const customer = await Customer.findByIdAndDelete(req.params.id)
+  await deleteFile(checkCustomer.image)
 
   if (customer) {
     res.json({ message: 'Customer deleted' })
@@ -57,12 +88,26 @@ const deleteCustomer = asyncHandler(async (req, res) => {
 // access: private/admin
 
 const updateCustomer = asyncHandler(async (req, res) => {
-  const { image, link } = req.body
+  const { link } = req.body;
+  const {image} = req.file
+
 
   const customer = await Customer.findById(req.params.id)
 
+  let uploaded, base64Data;
+      
+        if (image) {
+          const optimizedBuffer = await sharp(image.buffer)
+            .webp({ quality: 80 })
+            .toBuffer();
+      
+          base64Data = `data:image/webp;base64,${optimizedBuffer.toString("base64")}`;
+      
+          uploaded = await uploadToCloudinary(base64Data, "products");
+        }
+
   if (customer) {
-    customer.image = image || customer.image
+    customer.image = uploaded?.secure_url || customer.image
     customer.link = link || customer.link
 
     const updatedBrand = await customer.save()
