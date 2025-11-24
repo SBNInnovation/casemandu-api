@@ -18,9 +18,10 @@ const getCustomer = asyncHandler(async (req, res) => {
 // access: private/admin
 
 const createCustomer = asyncHandler(async (req, res) => {
-  const { link } = req.body
+  const { link } = req.body;
 
-  const {image} = req.file
+  const image = req.file;
+  // console.log(req.file)
 
     if (!image) {
         return res

@@ -51,7 +51,7 @@ const createOffer = asyncHandler(async (req, res) => {
   const { title, category, description, price, discount, models } =
     req.body;
 
-  const {image} = req.file;
+  const image = req.file;
 
    if (!image) {
         return res
@@ -111,7 +111,7 @@ const updateOffer = asyncHandler(async (req, res) => {
   const { title, category, description, price, discount, models } =
     req.body;
 
-  const {image} = req.file;
+  const image = req.file;
 
   const offer = await Offer.findOne({ slug: req.params.slug })
 
