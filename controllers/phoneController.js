@@ -316,7 +316,12 @@ const deletePhoneModelCustomize = async (req, res) => {
       });
     }
 
-    // remove the model
+    // FIX: Delete image of that model
+    if (checkModel.templateImg) {
+      await deleteFile(checkModel.templateImg); 
+    }
+
+    // Remove model from array
     checkPhone.models = checkPhone.models.filter(
       (model) => String(model._id) !== modelID
     );
@@ -336,8 +341,6 @@ const deletePhoneModelCustomize = async (req, res) => {
     });
   }
 };
-
-
 
 // @desc Delete a phone
 // @route DELETE /api/phones/:id
