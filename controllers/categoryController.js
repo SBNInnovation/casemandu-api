@@ -1,7 +1,9 @@
 const asyncHandler = require('express-async-handler')
 const Category = require('../models/categoryModel.js')
 const Product = require("../models/productModel.js")
-const slugify = require("slugify")
+const slugify = require("slugify");
+const { uploadToCloudinary, deleteFile } = require('../utils/cloudinary.js');
+const sharp = require("sharp")
 
 // @desc    Get all category
 // route    GET /api/categories
@@ -90,7 +92,9 @@ const getCategoryById = asyncHandler(async (req, res) => {
 // access   private/admin
 
 const createCategory = asyncHandler(async (req, res) => {
-  const { title, description, image, delete_url } = req.body;
+  const { title, description} = req.body;
+
+  const image = req.file;
 
   // Basic validation
   if (!title || !description) {
@@ -99,6 +103,25 @@ const createCategory = asyncHandler(async (req, res) => {
       message: "Title and description are required.",
     });
   }
+
+  if (!image) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Please upload the photo." });
+    }
+  
+    // Compress + convert to webp
+    const optimizedBuffer = await sharp(image.buffer)
+      .webp({ quality: 80 })
+      .toBuffer();
+  
+    const base64Data = `data:image/webp;base64,${optimizedBuffer.toString("base64")}`;
+  
+    // Upload to Cloudinary
+    const uploaded = await uploadToCloudinary(
+      base64Data,
+      "options"
+    );
 
   // Check existing category (case-insensitive)
   const existingCategory = await Category.findOne({
@@ -117,7 +140,7 @@ const createCategory = asyncHandler(async (req, res) => {
     title: title.trim(),
     slug:slug1,
     description,
-    image,
+    image:uploaded?.secure_url,
     delete_url
   });
 
@@ -153,6 +176,8 @@ const deleteCategory = asyncHandler(async (req, res) => {
   }
   const category = await Category.findByIdAndDelete(id)
 
+  await deleteFile(findCategory.image)
+
   if (category) {
     res.json({success:true, message: 'Category deleted', data: findCategory.delete_url })
   } else {
@@ -166,16 +191,31 @@ const deleteCategory = asyncHandler(async (req, res) => {
 // access private/admin
 
 const updateCategory = asyncHandler(async (req, res) => {
-  const { title, description, image, delete_url} = req.body
+  const { title, description } = req.body
+
+  const {image} = req.file
 
   const category = await Category.findById(req.params.id)
   const slug1 = title ? slugify(title) : category.slug;
+
+   let uploaded, base64Data;
+    
+      if (image) {
+        const optimizedBuffer = await sharp(image.buffer)
+          .webp({ quality: 80 })
+          .toBuffer();
+    
+        base64Data = `data:image/webp;base64,${optimizedBuffer.toString("base64")}`;
+    
+        uploaded = await uploadToCloudinary(base64Data, "products");
+      }
+  
   if (category) {
     category.title = title || category.title
     category.slug = slug1
     category.description = description || category.description
-    category.image = image || category.image
-    category.delete_url = delete_url || category.delete_url
+    category.image = uploaded?.secure_url || category.image
+    // category.delete_url = delete_url || category.delete_url
 
     const updatedCategory = await category.save()
     res.json({

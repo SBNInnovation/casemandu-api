@@ -3,7 +3,7 @@ const asyncHandler = require("express-async-handler");
 const Option = require("../models/optionModels.js");
 const Product = require("../models/productModel.js");
 const Category = require("../models/categoryModel.js");
-const { uploadToCloudinary } = require("../utils/cloudinary.js");
+const { uploadToCloudinary, deleteFile } = require("../utils/cloudinary.js");
 const sharp = require("sharp")
 
 // @desc    Get all options
@@ -176,10 +176,20 @@ const deleteOption = asyncHandler(async (req, res) => {
     })
     return
   }
+  const checkOption = await Option.findById(req.params.id);
+  if(!checkOption){
+    res.status(400).json({
+      success:false,
+      message:"option not found"
+    })
+    return
+  }
   const option = await Option.findByIdAndDelete(req.params.id);
 
+  await deleteFile(checkOption.image)
+
   if (option) {
-    res.json({success:true, message: "Option deleted", data:option.delete_url});
+    res.json({success:true, message: "Option deleted"});
   } else {
     res.status(404);
     throw new Error("Option not found");
