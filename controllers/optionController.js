@@ -3,6 +3,8 @@ const asyncHandler = require("express-async-handler");
 const Option = require("../models/optionModels.js");
 const Product = require("../models/productModel.js");
 const Category = require("../models/categoryModel.js");
+const { uploadToCloudinary } = require("../utils/cloudinary.js");
+const sharp = require("sharp")
 
 // @desc    Get all options
 // route    GET /api/options
@@ -51,18 +53,38 @@ const getOptionById = asyncHandler(async (req, res) => {
 // route    POST /api/options
 // access   private/admin
 const createOption = asyncHandler(async (req, res) => {
-  const { name, route, image, delete_url } = req.body;
+  const { name, route } = req.body;
 
-  if (!name || !route || !image) {
+  const image = req.file
+
+  if (!name || !route) {
     res.status(400);
     throw new Error("Please add all fields (name, route, image)");
   }
 
+  if (!image) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Please upload the photo." });
+  }
+
+  // Compress + convert to webp
+  const optimizedBuffer = await sharp(image.buffer)
+    .webp({ quality: 80 })
+    .toBuffer();
+
+  const base64Data = `data:image/webp;base64,${optimizedBuffer.toString("base64")}`;
+
+  // Upload to Cloudinary
+  const uploaded = await uploadToCloudinary(
+    base64Data,
+    "options"
+  );
+
   const option = await Option.create({
     name,
     route,
-    image,
-    delete_url
+    image:uploaded.secure_url
   });
 
   res.status(201).json({success:true, message:"created successfully",data:option});
@@ -72,14 +94,28 @@ const createOption = asyncHandler(async (req, res) => {
 // route    PUT /api/options/:id
 // access   private/admin
 const updateOption = asyncHandler(async (req, res) => {
-  const { name, route, image, delete_url } = req.body;
+  const { name, route} = req.body;
+
+  const image = req.file;
 
   const option = await Option.findById(req.params.id);
+
+    let uploaded, base64Data;
+  
+    if (image) {
+      const optimizedBuffer = await sharp(image.buffer)
+        .webp({ quality: 80 })
+        .toBuffer();
+  
+      base64Data = `data:image/webp;base64,${optimizedBuffer.toString("base64")}`;
+  
+      uploaded = await uploadToCloudinary(base64Data, "products");
+    }
 
   if (option) {
     option.name = name || option.name;
     option.route = route || option.route;
-    option.image = image || option.image;
+    option.image = uploaded?.secure_url || option.image;
     option.delete_url = delete_url || option.delete_url;
 
     const updatedOption = await option.save();
