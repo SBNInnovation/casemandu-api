@@ -1,7 +1,7 @@
 const PhoneModel = require('../models/phoneModel')
 const Customize = require('../models/customizeModel')
 const expressAsyncHandler = require('express-async-handler');
-const { uploadToCloudinary } = require('../utils/cloudinary');
+const { uploadToCloudinary, deleteFile } = require('../utils/cloudinary');
 const sharp = require("sharp");
 
 // @desc   Fetch all phones
@@ -299,6 +299,8 @@ const deleteBrand = expressAsyncHandler(async (req, res) => {
     res.status(400)
     throw new Error('Delete all models first')
   }
+
+  await deleteFile(phone.model.templateImg)
 
   await phone.deleteOne()
 
