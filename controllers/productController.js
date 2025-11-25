@@ -465,7 +465,6 @@ const updateProduct = asyncHandler(async (req, res) => {
   product.slug =
     (title && (await createSLUG(Product, title))) || product.slug;
   product.image = uploaded?.secure_url || product.image;
-
   product.category = category || product.category;
   product.tags = tags || product.tags;
   product.features = parsedFeatures || product.features;

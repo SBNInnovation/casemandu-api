@@ -12,15 +12,48 @@ const sharp = require("sharp")
 // access:  public
 
 const getOffers = asyncHandler(async (req, res) => {
-  const offers = await Offer.find({})
-    .populate('category', 'title')
+  const page = Math.max(parseInt(req.query.page) || 1, 1);
+  const limit = Math.max(parseInt(req.query.limit) || 10, 1);
+  const search = req.query.search?.toString();
+  const categories = req.query.categories?.toString();
+
+    const skip = (page - 1) * limit;
+
+  let query = {};
+
+  //  Search filter
+  if (search) {
+    query.$or = [
+      { title: { $regex: search, $options: "i" } }
+    ];
+  }
+
+  //  Category filter (single category only)
+  if (categories) {
+    query.category = categories;
+  }
+
+  // For pagination
+  const totalOffers = await Offer.countDocuments(query);
+
+  const offers = await Offer.find(query)
+    .populate("category", "title")
     .populate({
-      path: 'models',
-      populate: { path: 'brand', select: 'title' },
+      path: "models",
+      populate: { path: "brand", select: "title" },
     })
     .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
 
-  res.status(200).json(offers)
+  res.status(200).json({
+    success: true,
+    page,
+    limit,
+    total: totalOffers,
+    totalPages: Math.ceil(totalOffers / limit),
+    data: offers,
+  });
 })
 
 // desc:    Get a offer by slug
