@@ -116,8 +116,8 @@ async function createEmailTest({ body }) {
   const transporter = nodemailer.createTransport({
     service: "gmail", // Or your email provider
     auth: {
-      user: "04prashant13@gmail.com",
-      pass: "plcy kknn rxku vyvc", // For Gmail, this is an "App Password", not your regular password
+      user: "manducase@gmail.com",
+      pass: "zlcs xlgm xkjl nqzf", // For Gmail, this is an "App Password", not your regular password
     },
   });
 
