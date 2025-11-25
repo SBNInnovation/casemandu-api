@@ -24,8 +24,8 @@ const getOffers = asyncHandler(async (req, res) => {
   //  Search filter
   if (search) {
     query.$or = [
-      { title: { $regex: search, $options: "i" } },
-      {category:{$regex:search,$options:"i"}}
+      { title: { $regex: search, $options: "i" }},
+      {description:{$regex:search, $options:"i"}}
     ];
   }
 
