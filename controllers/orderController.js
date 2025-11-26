@@ -2,6 +2,7 @@ const Order = require("../models/orderModel");
 const asyncHandler = require("express-async-handler");
 const PromocodeModel = require("../models/promocodeModel");
 const nodemailer = require("nodemailer");
+const { compressAndUpload } = require("../utils/compressAndUpload");
 // @desc    Create new order
 // @route   POST /api/orders
 // @access  Public
@@ -16,11 +17,16 @@ const addOrderItems = asyncHandler(async (req, res) => {
     additionalInfo,
     orderItems,
     paymentMethod,
-    paymentImage,
-    customImage,
     customCaseCoordinates,
     priceSummary,
   } = req.body;
+
+  const paymentImage = req.files.paymentImage?.[0];
+  const customImage = req.files.customImage?.[0];
+
+  if (!paymentImage || !customImage) {
+    return res.status(400).json({ message: "Both images are required" });
+  }
 
   if ((orderItems && orderItems.length === 0) || !priceSummary) {
     console.log(orderItems, priceSummary);
@@ -33,12 +39,15 @@ const addOrderItems = asyncHandler(async (req, res) => {
     !phone ||
     !city ||
     !shippingAddress ||
-    !paymentMethod ||
-    !paymentImage
+    !paymentMethod
   ) {
     res.status(400);
     throw new Error("All fields are required");
   }
+
+  const uploaded = await compressAndUpload(paymentImage.buffer, "paymentImage");
+  const uploadedCustom = await compressAndUpload(customImage.buffer, "customImage");
+
 
   if (priceSummary?.promoCode) {
     const isValidPromoCode = await PromocodeModel.findOne({
@@ -85,8 +94,8 @@ const addOrderItems = asyncHandler(async (req, res) => {
     email,
     additionalInfo,
     paymentMethod,
-    paymentImage,
-    customImage,
+    paymentImage:uploaded?.secure_url,
+    customImage:uploadedCustom?.secure_url,
     customCaseCoordinates,
     priceSummary,
   });
