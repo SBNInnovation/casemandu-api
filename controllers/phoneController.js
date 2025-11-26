@@ -3,7 +3,6 @@ const Customize = require('../models/customizeModel')
 const expressAsyncHandler = require('express-async-handler');
 const { uploadToCloudinary, deleteFile } = require('../utils/cloudinary');
 const sharp = require("sharp");
-const { model } = require('mongoose');
 
 // @desc   Fetch all phones
 // @route  GET /api/phones
