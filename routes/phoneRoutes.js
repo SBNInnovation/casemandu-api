@@ -43,3 +43,48 @@ router
   .delete(protect, admin, deletePhoneModel)
 
 module.exports = router
+const deletePhoneModelCustomize = async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const checkPhone = await PhoneModel.findById(id);
+    if (!checkPhone) {
+      return res.status(400).json({
+        success: false,
+        message: "Phone not found",
+      });
+    }
+
+    const { modelID } = req.query;
+
+    const checkModel = checkPhone.models.find(
+      (model) => String(model._id) === modelID
+    );
+
+    if (!checkModel) {
+      return res.status(400).json({
+        success: false,
+        message: "Model not found",
+      });
+    }
+
+    // remove the model
+    checkPhone.models = checkPhone.models.filter(
+      (model) => String(model._id) !== modelID
+    );
+
+    await checkPhone.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Model deleted successfully",
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
