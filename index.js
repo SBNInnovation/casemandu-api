@@ -3,6 +3,7 @@ const dotenv = require("dotenv");
 const connectDB = require("./config/connectDB.js");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const serverless = require("serverless-http"); // import
 
 // importing middlewares
 const { notFound, errorHandler } = require("./middlewares/errorMiddleware.js");
@@ -28,7 +29,7 @@ const optionRoutes = require("./routes/optionRoutes.js");
 const { dashboardRouter } = require("./routes/dashboardRoutes.js");
 // const PhoneModel = require("./models/phoneModel.js");
 // const Category = require("./models/categoryModel.js");
-// const serverless = require("serverless-http"); // import
+
 
 
 const app = express();
@@ -147,13 +148,30 @@ const PORT = process.env.PORT || 5000;
 // check()
 
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+// app.listen(PORT, () => {
+//   console.log(`Server is running on port ${PORT}`);
+// });
 
 // Export for Vercel
 // module.exports = app;
-// module.exports.handler = serverless(app);
-// module.exports.handler = serverless(app);
+module.exports.handler = serverless(app);
 
  // "node": "18.x"
+
+
+ //vercel json
+ // {
+//   "version": 2,
+//   "builds": [
+//     {
+//       "src": "./index.js",
+//       "use": "@vercel/node"
+//     }
+//   ],
+//   "routes": [
+//     {
+//       "src": "/(.*)",
+//       "dest": "/"
+//     }
+//   ]
+// }
