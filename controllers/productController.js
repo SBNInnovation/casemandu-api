@@ -122,6 +122,7 @@ const getProductForAdmin = async (req, res) => {
           message:"No product found",
           data:{totalProducts:[]}
         })
+        return
       }
 
     const now = new Date();
