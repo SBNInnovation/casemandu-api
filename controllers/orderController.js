@@ -37,10 +37,6 @@ const addOrderItems = asyncHandler(async (req, res) => {
     orderItems = JSON.parse(orderItems);
   }
 
-// if (!priceSummary) {
-//   return res.status(400).json({ message: "priceSummary is required" });
-// }
-
 // Only parse if it's a string
 if (typeof priceSummary === "string") {
   try {
