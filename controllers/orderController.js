@@ -15,17 +15,43 @@ const addOrderItems = asyncHandler(async (req, res) => {
     city,
     shippingAddress,
     additionalInfo,
-    orderItems,
+    // orderItems,
     paymentMethod,
-    customCaseCoordinates,
-    priceSummary,
+    // customCaseCoordinates,
+    // priceSummary,
   } = req.body;
+
+  let orderItems = req.body.orderItems;
+  let priceSummary = req.body.priceSummary;
+  let customCaseCoordinates = req.body.customCaseCoordinates;
 
   const paymentImage = req.files.paymentImage?.[0];
   const customImage = req.files.customImage?.[0];
 
   if (!paymentImage || !customImage) {
     return res.status(400).json({ message: "Both images are required" });
+  }
+
+
+  if (typeof orderItems === "string") {
+    orderItems = JSON.parse(orderItems);
+  }
+
+// if (!priceSummary) {
+//   return res.status(400).json({ message: "priceSummary is required" });
+// }
+
+// Only parse if it's a string
+if (typeof priceSummary === "string") {
+  try {
+    priceSummary = JSON.parse(priceSummary);
+  } catch (err) {
+    return res.status(400).json({ message: "Invalid JSON in priceSummary" });
+  }
+}
+
+  if (typeof customCaseCoordinates === "string") {
+    customCaseCoordinates = JSON.parse(customCaseCoordinates);
   }
 
   if ((orderItems && orderItems.length === 0) || !priceSummary) {
