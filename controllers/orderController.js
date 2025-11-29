@@ -28,8 +28,8 @@ const addOrderItems = asyncHandler(async (req, res) => {
   const paymentImage = req.files.paymentImage?.[0];
   const customImage = req.files.customImage?.[0];
 
-  if (!paymentImage || !customImage) {
-    return res.status(400).json({ message: "Both images are required" });
+  if (!paymentImage && !customImage) {
+    return res.status(400).json({ message: "At least payment image is required" });
   }
 
 
