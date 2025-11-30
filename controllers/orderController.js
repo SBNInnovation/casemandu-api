@@ -152,11 +152,9 @@ const addOrderItems = asyncHandler(async (req, res) => {
     paymentMethod,
   } = req.body;
 
-  // Extract files
   const paymentImage = req?.files?.paymentImage?.[0];
   const customImage = req?.files?.customImage?.[0];
 
-  // payment image must always exist
   if (!paymentImage) {
     return res.status(400).json({ message: "Payment image is required" });
   }
