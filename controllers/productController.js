@@ -54,44 +54,45 @@ const getProductForAdmin = async (req, res) => {
   try {
     const page = Math.max(parseInt(req.query.page) || 1, 1);
     const limit = Math.max(parseInt(req.query.limit) || 10, 1);
-    const activation = req.query.activation?.toString();
-    const status = req.query.status?.toString();
-    const search = req.query.search?.toString();
-    const categories = req.query.categories?.toString();
-    const options = req.query.options?.toString();
-    const sort = req.query.sort?.toString();
+    const activation = req.query.activation;
+    const status = req.query.status;
+    const search = req.query.search;
+    const categories = req.query.categories;
+    const options = req.query.options;
+    const sort = req.query.sort;
 
     const skip = (page - 1) * limit;
     let query = {};
 
-
-    // 🔍 Search filter
+    // Search filter
     if (search) {
-      query.$or = [{ title: { $regex: search, $options: "i" } }];
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ];
     }
 
-    //  Category filter
+    // Category filter
     if (categories) {
-      query.category = categories;
+      const catList = categories.split(",");
+      query.category = { $in: catList };
     }
 
-    // Option filter
+    // Option filter FIXED
     if (options) {
-      query.option = options;
+      const optionList = options.split(",");
+      query.option = { $in: optionList };
     }
 
     // Activation filter
-    if (activation === "active") query.isActivate = true; 
+    if (activation === "active") query.isActivate = true;
     if (activation === "inactive") query.isActivate = false;
 
-    // New product filter
-    if (status === "new") {
-      query.isNew = true;
-    } else if (status === "old") {
-      query.isNew = false;
-    }
+    // New / old filter
+    if (status === "new") query.isNew = true;
+    if (status === "old") query.isNew = false;
 
-    // Sorting logic
+    // Sorting
     let sortQuery = {};
     switch (sort) {
       case "createdAtasc":
@@ -110,48 +111,46 @@ const getProductForAdmin = async (req, res) => {
         sortQuery.createdAt = -1;
     }
 
-    // Fetch filtered products
-    const products = await Product.find(query).populate("category", "title -_id")
+    // Fetch products
+    const products = await Product.find(query)
+      .populate("category", "title -_id")
       .sort(sortQuery)
       .limit(limit)
       .skip(skip);
 
-      if(products.length === 0){
-        res.status(200).json({
-          success:true,
-          message:"No product found",
-          data:{totalProducts:[]}
-        })
-        return
-      }
+    if (products.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: "No product found",
+        data: { totalProducts: [] },
+      });
+    }
 
+    // Dashboard counters
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1); // 1st day of current month
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999); // last day of month
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
-    const monthsAgo = new Date();
-    monthsAgo.setMonth(monthsAgo.getMonth() - 1);
-
-    // Get dashboard counters
     const [
       totalProducts,
       productsFound,
       totalActiveProd,
       totalInactiveProd,
-      newThisMonth
+      newThisMonth,
     ] = await Promise.all([
       Product.countDocuments({}),
       Product.countDocuments(query),
       Product.countDocuments({ isActivate: true }),
       Product.countDocuments({ isActivate: false }),
-      Product.countDocuments({createdAt: { $gte: startOfMonth, $lte: endOfMonth }})
+      Product.countDocuments({
+        createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+      }),
     ]);
-
 
     return res.status(200).json({
       success: true,
       data: {
-        totalProducts:products,
+        totalProducts: products,
         pagination: {
           totalProducts,
           productsFound,
@@ -159,7 +158,7 @@ const getProductForAdmin = async (req, res) => {
           totalInactive: totalInactiveProd,
           newProduct: newThisMonth,
           currentPage: page,
-          totalPages: Math.ceil(totalProducts / limit),
+          totalPages: Math.ceil(productsFound / limit),
           limit,
         },
       },
@@ -172,6 +171,7 @@ const getProductForAdmin = async (req, res) => {
     });
   }
 };
+
 
 // @desc    Get all products by category
 // @route   GET /api/products/category/:slug
