@@ -97,12 +97,12 @@ const createCategory = asyncHandler(async (req, res) => {
   const image = req.file;
 
   // Basic validation
-  if (!title || !description) {
-    return res.status(400).json({
-      success: false,
-      message: "Title and description are required.",
-    });
-  }
+  // if (!title || !description) {
+  //   return res.status(400).json({
+  //     success: false,
+  //     message: "Title and description are required.",
+  //   });
+  // }
 
   if (!image) {
       return res
@@ -193,7 +193,9 @@ const deleteCategory = asyncHandler(async (req, res) => {
 const updateCategory = asyncHandler(async (req, res) => {
   const { title, description } = req.body
 
-  const {image} = req.file
+  const image = req.file;
+
+  // console.log(image,"img")
 
   const category = await Category.findById(req.params.id)
   const slug1 = title ? slugify(title) : category.slug;
@@ -215,6 +217,7 @@ const updateCategory = asyncHandler(async (req, res) => {
     category.slug = slug1
     category.description = description || category.description
     category.image = uploaded?.secure_url || category.image
+    // console.log(uploaded.secure_url)
     // category.delete_url = delete_url || category.delete_url
 
     const updatedCategory = await category.save()
