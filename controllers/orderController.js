@@ -254,6 +254,59 @@ const addOrderItems = asyncHandler(async (req, res) => {
 
   const createdOrder = await newOrder.save();
 
+
+  const io = req.app.get("io");
+
+  // emit to admin room only
+  io.to("admins").emit("new-order", {
+    _id: createdOrder._id,
+
+    // Order identification
+    order_id: createdOrder.order_id,
+    status: createdOrder.status,
+    orderedAt: createdOrder.orderedAt,
+    createdAt: createdOrder.createdAt,
+    updatedAt: createdOrder.updatedAt,
+
+    // Customer details
+    name: createdOrder.name,
+    phone: createdOrder.phone,
+    email: createdOrder.email,
+    city: createdOrder.city,
+    shippingAddress: createdOrder.shippingAddress,
+    additionalInfo: createdOrder.additionalInfo,
+
+    // Order items
+    orderItems: createdOrder.orderItems.map((item) => ({
+      name: item.name,
+      qty: item.qty,
+      price: item.price,
+      image: item.image,
+      variant: item.variant,
+    })),
+
+    // Custom case info
+    customImage: createdOrder.customImage,
+    customCaseCoordinates: createdOrder.customCaseCoordinates,
+
+    // Payment info
+    paymentMethod: createdOrder.paymentMethod,
+    paymentImage: createdOrder.paymentImage,
+
+    // Pricing
+    priceSummary: {
+      promoCode: createdOrder.priceSummary.promoCode,
+      total: createdOrder.priceSummary.total,
+      discountAmount: createdOrder.priceSummary.discountAmount,
+      deliveryCharge: createdOrder.priceSummary.deliveryCharge,
+      grandTotal: createdOrder.priceSummary.grandTotal,
+    },
+
+    // Shipping
+    shippedAt: createdOrder.shippedAt,
+  });
+
+
   if (createdOrder) {
     const emailSent = await createEmailTest({
       body: {

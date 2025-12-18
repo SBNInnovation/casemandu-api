@@ -3,6 +3,8 @@ const dotenv = require("dotenv");
 const connectDB = require("./config/connectDB.js");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const http = require("http")
+const {Server} = require("socket.io")
 const serverless = require("serverless-http"); // import
 
 // importing middlewares
@@ -33,6 +35,7 @@ const { dashboardRouter } = require("./routes/dashboardRoutes.js");
 
 
 const app = express();
+const server = http.createServer(app);
 
 dotenv.config();
 connectDB();
@@ -66,6 +69,7 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/options", optionRoutes);
 app.use("/api/dashboard", dashboardRouter);
 
+
 app.get("/", (req, res) => {
   res.send("Casemandu api is running...");
 });
@@ -75,11 +79,39 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+// app.listen(PORT, () => {
+//   console.log(`Server is running on port ${PORT}`);
+// });
+
+const io = new Server(server, {
+  cors: {
+    origin:  ["https://client-casemandu.vercel.app", "https://admin-casemandu.vercel.app","http://localhost:3000", "https://casemandu-client.vercel.app","https://customize-new-sigma.vercel.app"], // change in production
+    methods: ["GET", "POST"],
+  },
+});
+
+// make io accessible everywhere
+app.set("io", io);
+
+io.on("connection", (socket) => {
+  console.log("Socket connected:", socket.id);
+
+  socket.on("join-admin", () => {
+    socket.join("admins");
+    console.log("Admin joined admins room");
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Socket disconnected:", socket.id);
+  });
+});
+
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
 
 
+module.exports = { server };
 //updated
 
 // Export for Vercel
