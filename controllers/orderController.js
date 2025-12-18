@@ -253,12 +253,14 @@ const addOrderItems = asyncHandler(async (req, res) => {
   });
 
   const createdOrder = await newOrder.save();
-
-
+  const pendingOrdersCount = await Order.countDocuments({
+  status: "Pending",
+});
   const io = req.app.get("io");
 
   // emit to admin room only
   io.to("admins").emit("new-order", {
+    order:{
     _id: createdOrder._id,
 
     // Order identification
@@ -304,7 +306,9 @@ const addOrderItems = asyncHandler(async (req, res) => {
 
     // Shipping
     shippedAt: createdOrder.shippedAt,
-  });
+  },
+  pendingOrders:pendingOrdersCount
+});
 
 
   if (createdOrder) {
