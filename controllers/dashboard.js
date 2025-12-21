@@ -18,6 +18,7 @@ const getDashboardData = async (req, res) => {
     const totalRevenue = totalRevenueAgg[0]?.totalRevenue || 0;
     const totalOrders = totalRevenueAgg[0]?.totalOrders || 0;
     const productsDelivered = await Product.countDocuments({});
+    const pendingOrderTotal = await Order.countDocuments({status:"Pending"})
 
     const statsData = [
       {
@@ -125,6 +126,7 @@ const getDashboardData = async (req, res) => {
       orderHistory: orderHistoryDataByYear,
       revenueByMonth: revenueByMonthDataByYear,
       salesByCategory: salesByCategoryAgg,
+      pendingOrders: pendingOrderTotal || 0
     });
   } catch (err) {
     console.error(err);

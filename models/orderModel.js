@@ -16,7 +16,7 @@ const orderItemSchema = new mongoose.Schema(
 const orderSchema = new mongoose.Schema(
   {
     order_id: {
-      type: Number,
+      type: String,
       required: true,
     },
     orderItems: [orderItemSchema],
