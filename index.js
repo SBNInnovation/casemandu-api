@@ -29,6 +29,8 @@ const optionRoutes = require("./routes/optionRoutes.js");
 
 // const Product = require("./models/productModel.js");
 const { dashboardRouter } = require("./routes/dashboardRoutes.js");
+const { deleteMany } = require("./models/orderModel.js");
+const Order = require("./models/orderModel.js");
 // const PhoneModel = require("./models/phoneModel.js");
 // const Category = require("./models/categoryModel.js");
 
@@ -85,7 +87,7 @@ const PORT = process.env.PORT || 5000;
 
 const io = new Server(server, {
   cors: {
-    origin:  ["https://client-casemandu.vercel.app", "https://admin-casemandu.vercel.app","http://localhost:3000", "https://casemandu-client.vercel.app","https://customize-new-sigma.vercel.app"], // change in production
+    origin:  ["https://client-casemandu.vercel.app", "https://admin-casemandu.vercel.app","http://localhost:3000", "https://casemandu-client.vercel.app","https://customize-new-sigma.vercel.app","https://casemandu.com.np"], // change in production
     methods: ["GET", "POST"],
   },
 });
