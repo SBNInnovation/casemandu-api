@@ -453,6 +453,7 @@ const addOrderItems = asyncHandler(async (req, res) => {
   res.status(201).json({
     message: "Order placed successfully",
     order_id: createdOrder.order_id,
+    data: createdOrder
   });
 
   // ---------- Non-blocking socket emit ----------
