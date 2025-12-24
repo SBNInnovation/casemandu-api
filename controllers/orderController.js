@@ -507,6 +507,18 @@ const addOrderItems = asyncHandler(async (req, res) => {
 async function createEmailTest({ body }) {
   const { customerEmail, orderId,TotalPrice, TrackingUrl, name } = body;
 
+    if (!customerEmail || !orderId || !TotalPrice) {
+    throw new Error("Missing email fields");
+  }
+
+  // const transporter = nodemailer.createTransport({
+  //   service: "gmail",
+  //   auth: {
+  //     user: process.env.EMAIL_USER,
+  //     pass: process.env.EMAIL_PASS,
+  //   },
+  // });
+
   const transporter = nodemailer.createTransport({
     service: "gmail", // Or your email provider
     auth: {
