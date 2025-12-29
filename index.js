@@ -44,7 +44,7 @@ connectDB();
 
 // CORS Policy
 app.use(cors({
-      origin: ["https://client-casemandu.vercel.app", "https://admin-casemandu.vercel.app","http://localhost:3000", "https://casemandu-client.vercel.app","https://customize-new-sigma.vercel.app","https://www.casemandu.com.np","https://customize.casemandu.com.np","https://admin.casemandu.com.np"],
+      origin: ["https://client-casemandu.vercel.app", "https://admin-casemandu.vercel.app","http://localhost:3000", "https://casemandu-client.vercel.app","https://customize-new-sigma.vercel.app","https://www.casemandu.com.np","https://www.customize.casemandu.com.np","https://admin.casemandu.com.np"],
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
       credentials: true, // Allow cookies
     })
@@ -87,7 +87,7 @@ const PORT = process.env.PORT || 5000;
 
 const io = new Server(server, {
   cors: {
-    origin:  ["https://client-casemandu.vercel.app", "https://admin-casemandu.vercel.app","http://localhost:3000", "https://casemandu-client.vercel.app","https://customize-new-sigma.vercel.app","https://www.casemandu.com.np","https://customize.casemandu.com.np","https://admin.casemandu.com.np"], // change in production
+    origin:  ["https://client-casemandu.vercel.app", "https://admin-casemandu.vercel.app","http://localhost:3000", "https://casemandu-client.vercel.app","https://customize-new-sigma.vercel.app","https://www.casemandu.com.np","https://www.customize.casemandu.com.np","https://admin.casemandu.com.np"], // change in production
     methods: ["GET", "POST"],
   },
 });
