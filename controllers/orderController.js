@@ -348,32 +348,35 @@ const addOrderItems = asyncHandler(async (req, res) => {
   }
 
   // ---------- Safe JSON parsing ----------
-  const parseJSON = (value, fieldName) => {
-    if (typeof value === "string") {
-      try {
-        return JSON.parse(value);
-      } catch {
-        throw new Error(`Invalid JSON in ${fieldName}`);
-      }
-    }
-    return value;
-  };
+  // const parseJSON = (value, fieldName) => {
+  //   if (typeof value === "string") {
+  //     try {
+  //       return JSON.parse(value);
+  //     } catch {
+  //       throw new Error(`Invalid JSON in ${fieldName}`);
+  //     }
+  //   }
+  //   return value;
+  // };
 
   let orderItems, priceSummary, customCaseCoordinates;
 
-  try {
-    orderItems = parseJSON(req.body.orderItems, "orderItems");
-    priceSummary = parseJSON(req.body.priceSummary, "priceSummary");
-    customCaseCoordinates = parseJSON(
-      req.body.customCaseCoordinates,
-      "customCaseCoordinates"
-    );
-  } catch (err) {
-    return res.status(400).json({ message: err.message });
-  }
+  // try {
+  //   orderItems = parseJSON(req.body.orderItems, "orderItems");
+  //   priceSummary = parseJSON(req.body.priceSummary, "priceSummary");
+  //   customCaseCoordinates = parseJSON(
+  //     req.body.customCaseCoordinates,
+  //     "customCaseCoordinates"
+  //   );
+  // } catch (err) {
+  //   return res.status(400).json({ message: err.message });
+  // }
+
+  customCaseCoordinates = req.body.customCaseCoordinates
+
 
   // ---------- Validation ----------
-  if (!orderItems?.length || !priceSummary) {
+  if (!req.body.orderItems?.length || !req.body.priceSummary) {
     return res
       .status(400)
       .json({ message: "Order items or price summary missing" });
