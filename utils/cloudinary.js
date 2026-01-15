@@ -9,16 +9,6 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
-// const cloud_name = process.env.CLOUDINARY_CLOUD_NAME;
-// const api_key = process.env.CLOUDINARY_API_KEY;
-// const api_secret = process.env.CLOUDINARY_API_SECRET;
-
-// console.log(cloud_name, api_key, api_secret);
-
-
-// console.log(process.env.CLOUDINARY_API_KEY)
-
-// console.log(cloud_name,api_key,api_secret)
 
 if (
   !process.env.CLOUDINARY_CLOUD_NAME ||
