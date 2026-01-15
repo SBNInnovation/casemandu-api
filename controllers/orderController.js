@@ -3,143 +3,11 @@ const asyncHandler = require("express-async-handler");
 const PromocodeModel = require("../models/promocodeModel");
 const nodemailer = require("nodemailer");
 const { compressAndUpload } = require("../utils/compressAndUpload");
+const { deleteFile } = require("../utils/cloudinary");
 // @desc    Create new order
 // @route   POST /api/orders
 // @access  Public
 
-// const addOrderItems = asyncHandler(async (req, res) => {
-//   const {
-//     name,
-//     phone,
-//     email,
-//     city,
-//     shippingAddress,
-//     additionalInfo,
-//     // orderItems,
-//     paymentMethod,
-//     // customCaseCoordinates,
-//     // priceSummary,
-//   } = req.body;
-
-//   let orderItems = req.body.orderItems;
-//   let priceSummary = req.body.priceSummary;
-//   let customCaseCoordinates = req.body.customCaseCoordinates;
-
-//   const paymentImage = req.files.paymentImage?.[0];
-//   const customImage = req.files.customImage?.[0];
-
-//   if (!paymentImage && !customImage) {
-//     return res.status(400).json({ message: "At least payment image is required" });
-//   }
-
-
-//   if (typeof orderItems === "string") {
-//     orderItems = JSON.parse(orderItems);
-//   }
-
-// // Only parse if it's a string
-// if (typeof priceSummary === "string") {   
-//   try {
-//     priceSummary = JSON.parse(priceSummary);
-//   } catch (err) {
-//     return res.status(400).json({ message: "Invalid JSON in priceSummary" });
-//   }
-// }
-
-//   if (typeof customCaseCoordinates === "string") {
-//     customCaseCoordinates = JSON.parse(customCaseCoordinates);
-//   }
-
-//   if ((orderItems && orderItems.length === 0) || !priceSummary) {
-//     console.log(orderItems, priceSummary);
-//     res.status(400);
-//     throw new Error("No order items");
-//   }
-
-//   if (
-//     !name ||
-//     !phone ||
-//     !city ||
-//     !shippingAddress ||
-//     !paymentMethod
-//   ) {
-//     res.status(400);
-//     throw new Error("All fields are required");
-//   }
-
-//   const uploaded = await compressAndUpload(paymentImage.buffer, "paymentImage");
-//   const uploadedCustom = await compressAndUpload(customImage.buffer, "customImage");
-
-
-//   if (priceSummary?.promoCode) {
-//     const isValidPromoCode = await PromocodeModel.findOne({
-//       code: priceSummary.promoCode,
-//       isActive: true,
-//     });
-
-//     if (isValidPromoCode) {
-//       const disAmount = (priceSummary.total * isValidPromoCode.discount) / 100;
-
-//       priceSummary.discountAmount =
-//         disAmount > isValidPromoCode.maxAmount
-//           ? isValidPromoCode.maxAmount
-//           : disAmount;
-
-//       priceSummary.grandTotal =
-//         priceSummary.total -
-//         priceSummary.discountAmount +
-//         priceSummary.deliveryCharge;
-//     } else {
-//       res.status(400);
-//       throw new Error("Invalid promo code");
-//     }
-//   } else {
-//     priceSummary.discountAmount = 0;
-//     priceSummary.grandTotal = priceSummary.total + priceSummary.deliveryCharge;
-//   }
-
-//   const lastOrder = await Order.findOne().sort({ createdAt: -1 });
-//   let order_id;
-//   if (!lastOrder) {
-//     order_id = 1000;
-//   } else {
-//     order_id = lastOrder.order_id + 1;
-//   }
-
-//   const order = new Order({
-//     order_id,
-//     name,
-//     orderItems,
-//     shippingAddress,
-//     city,
-//     phone,
-//     email,
-//     additionalInfo,
-//     paymentMethod,
-//     paymentImage:uploaded?.secure_url,
-//     customImage:uploadedCustom?.secure_url,
-//     customCaseCoordinates,
-//     priceSummary,
-//   });
-
-//   const createdOrder = await order.save();
-//   if (createdOrder) {
-//     const emailSent = await createEmailTest({
-//       body: {
-//         customerEmail: createdOrder.email,
-//         name: createdOrder.name,
-//         orderDetails: `Order ID: ${createdOrder.order_id}, Total Price: ${createdOrder.priceSummary.grandTotal}`,
-//         TrackingUrl: `https://casemandu.com.np/order/${createdOrder._id}`,
-//       },
-//     });
-
-//     if (!emailSent) {
-//       console.error("Failed to send order confirmation email.");
-//     }
-//   }
-
-//   res.status(201).json(createdOrder);
-// });
 
 // const addOrderItems = asyncHandler(async (req, res) => {
 //   const {
@@ -159,67 +27,75 @@ const { compressAndUpload } = require("../utils/compressAndUpload");
 //     return res.status(400).json({ message: "Payment image is required" });
 //   }
 
-//   // Parse JSON fields safely
-//   let orderItems = req.body.orderItems;
-//   let priceSummary = req.body.priceSummary;
-//   let customCaseCoordinates = req.body.customCaseCoordinates;
-
-//   // Safe JSON parsing utility
+//   // ---------- Safe JSON parsing ----------
 //   const parseJSON = (value, fieldName) => {
 //     if (typeof value === "string") {
 //       try {
 //         return JSON.parse(value);
-//       } catch (err) {
+//       } catch {
 //         throw new Error(`Invalid JSON in ${fieldName}`);
 //       }
 //     }
 //     return value;
 //   };
 
+//   let orderItems, priceSummary, customCaseCoordinates;
+
 //   try {
-//     orderItems = parseJSON(orderItems, "orderItems");
-//     priceSummary = parseJSON(priceSummary, "priceSummary");
-//     customCaseCoordinates = parseJSON(customCaseCoordinates, "customCaseCoordinates");
+//     orderItems = parseJSON(req.body.orderItems, "orderItems");
+//     priceSummary = parseJSON(req.body.priceSummary, "priceSummary");
+//     customCaseCoordinates = parseJSON(
+//       req.body.customCaseCoordinates,
+//       "customCaseCoordinates"
+//     );
 //   } catch (err) {
 //     return res.status(400).json({ message: err.message });
 //   }
 
-//   // Validate required fields
-//   if (!orderItems || orderItems.length === 0 || !priceSummary) {
-//     return res.status(400).json({ message: "No order items or price summary missing" });
+//   // ---------- Validation ----------
+//   if (!orderItems?.length || !priceSummary) {
+//     return res
+//       .status(400)
+//       .json({ message: "Order items or price summary missing" });
 //   }
 
-//   if (!name || !phone || !email ||!city || !shippingAddress || !paymentMethod) {
+//   if (!name || !phone || !email || !city || !shippingAddress || !paymentMethod) {
 //     return res.status(400).json({ message: "All fields are required" });
 //   }
 
-//   // Upload required images
-//   const uploadedPayment = await compressAndUpload(paymentImage.buffer, "paymentImage");
+//   // ---------- Parallel uploads ----------
+//   const uploadTasks = [
+//     compressAndUpload(paymentImage.buffer, "paymentImage"),
+//   ];
 
-//   // Upload custom image (optional)
-//   let uploadedCustom = null;
 //   if (customImage) {
-//     uploadedCustom = await compressAndUpload(customImage.buffer, "customImage");
+//     uploadTasks.push(
+//       compressAndUpload(customImage.buffer, "customImage")
+//     );
 //   }
 
-//   // Apply promo code
-//   if (priceSummary?.promoCode) {
-//     const isValidPromoCode = await PromocodeModel.findOne({
+//   const [uploadedPayment, uploadedCustom] = await Promise.all(uploadTasks);
+
+//   // ---------- Parallel DB reads ----------
+//   const promoDoc = priceSummary?.promoCode
+//   ? await PromocodeModel.findOne({
 //       code: priceSummary.promoCode,
 //       isActive: true,
-//     });
+//     })
+//   : null;
 
-//     if (!isValidPromoCode) {
-//       return res.status(400).json({ message: "Invalid promo code" });
-//     }
 
-//     const discountAmount =
-//       (priceSummary.total * isValidPromoCode.discount) / 100;
+//   if (priceSummary?.promoCode && !promoDoc) {
+//     return res.status(400).json({ message: "Invalid promo code" });
+//   }
+
+//   // ---------- Price calculation ----------
+//   if (promoDoc) {
+//     const discount =
+//       (priceSummary.total * promoDoc.discount) / 100;
 
 //     priceSummary.discountAmount =
-//       discountAmount > isValidPromoCode.maxAmount
-//         ? isValidPromoCode.maxAmount
-//         : discountAmount;
+//       discount > promoDoc.maxAmount ? promoDoc.maxAmount : discount;
 
 //     priceSummary.grandTotal =
 //       priceSummary.total -
@@ -231,21 +107,20 @@ const { compressAndUpload } = require("../utils/compressAndUpload");
 //       priceSummary.total + priceSummary.deliveryCharge;
 //   }
 
-//   // Generate incremental order ID
-//   const lastOrder = await Order.findOne().sort({ createdAt: -1 });
-//   const order_id = lastOrder ? lastOrder.order_id + 1 : 1000;
+//   // ---------- Generate order ID (existing logic) ----------
+//   const order_id = `ORD-${Date.now()}`;
 
-//   // Create order
+//   // ---------- Create order ----------
 //   const newOrder = new Order({
 //     order_id,
 //     name,
-//     orderItems,
-//     shippingAddress,
-//     city,
 //     phone,
 //     email,
+//     city,
+//     shippingAddress,
 //     additionalInfo,
 //     paymentMethod,
+//     orderItems,
 //     paymentImage: uploadedPayment?.secure_url,
 //     customImage: uploadedCustom?.secure_url || null,
 //     customCaseCoordinates,
@@ -253,81 +128,62 @@ const { compressAndUpload } = require("../utils/compressAndUpload");
 //   });
 
 //   const createdOrder = await newOrder.save();
-//   const pendingOrdersCount = await Order.countDocuments({
-//   status: "Pending",
-// });
-//   const io = req.app.get("io");
 
-//   // emit to admin room only
-//   io.to("admins").emit("new-order", {
-//     order:{
-//     _id: createdOrder._id,
-
-//     // Order identification
+//   // ---------- Respond immediately ----------
+//   res.status(201).json({
+//     message: "Order placed successfully",
 //     order_id: createdOrder.order_id,
-//     status: createdOrder.status,
-//     orderedAt: createdOrder.orderedAt,
-//     createdAt: createdOrder.createdAt,
-//     updatedAt: createdOrder.updatedAt,
+//     data: createdOrder
+//   });
 
-//     // Customer details
-//     name: createdOrder.name,
-//     phone: createdOrder.phone,
-//     email: createdOrder.email,
-//     city: createdOrder.city,
-//     shippingAddress: createdOrder.shippingAddress,
-//     additionalInfo: createdOrder.additionalInfo,
+//   // ---------- Non-blocking socket emit ----------
+//   setImmediate(async () => {
+//     try {
+//       const pendingOrdersCount = await Order.countDocuments({
+//         status: "Pending",
+//       });
 
-//     // Order items
-//     orderItems: createdOrder.orderItems.map((item) => ({
-//       name: item.name,
-//       qty: item.qty,
-//       price: item.price,
-//       image: item.image,
-//       variant: item.variant,
-//     })),
+//       const io = req.app.get("io");
 
-//     // Custom case info
-//     customImage: createdOrder.customImage,
-//     customCaseCoordinates: createdOrder.customCaseCoordinates,
-
-//     // Payment info
-//     paymentMethod: createdOrder.paymentMethod,
-//     paymentImage: createdOrder.paymentImage,
-
-//     // Pricing
-//     priceSummary: {
-//       promoCode: createdOrder.priceSummary.promoCode,
-//       total: createdOrder.priceSummary.total,
-//       discountAmount: createdOrder.priceSummary.discountAmount,
-//       deliveryCharge: createdOrder.priceSummary.deliveryCharge,
-//       grandTotal: createdOrder.priceSummary.grandTotal,
-//     },
-
-//     // Shipping
-//     shippedAt: createdOrder.shippedAt,
-//   },
-//   pendingOrders:pendingOrdersCount
-// });
-
-
-//   if (createdOrder) {
-//     const emailSent = await createEmailTest({
-//       body: {
-//         customerEmail: createdOrder.email,
-//         name: createdOrder.name,
-//         orderDetails: `Order ID: ${createdOrder.order_id}, Total Price: ${createdOrder.priceSummary.grandTotal}`,
-//         TrackingUrl: `https://casemandu.com.np/order/${createdOrder._id}`,
-//       },
-//     });
-
-//     if (!emailSent) {
-//       console.error("Failed to send order confirmation email.");
+//       io.to("admins").emit("new-order", {
+//         order: {
+//           _id: createdOrder._id,
+//           order_id: createdOrder.order_id,
+//           status: createdOrder.status,
+//           createdAt: createdOrder.createdAt,
+//           name: createdOrder.name,
+//           phone: createdOrder.phone,
+//           city: createdOrder.city,
+//           orderItems: createdOrder.orderItems,
+//           paymentMethod: createdOrder.paymentMethod,
+//           paymentImage: createdOrder.paymentImage,
+//           priceSummary: createdOrder.priceSummary,
+//         },
+//         pendingOrders: pendingOrdersCount,
+//       });
+//     } catch (err) {
+//       console.error("Socket emit failed:", err.message);
 //     }
-//   }
-
-//   res.status(201).json(createdOrder);
+//   });
+//   if (createdOrder) {
+//   setImmediate(async () => {
+//     try {
+//       await createEmailTest({
+//         body: {
+//           customerEmail: createdOrder.email,
+//           name: createdOrder.name,
+//           orderId: `Order Id: ${createdOrder.order_id}`,
+//           TotalPrice: `Total Price: ${createdOrder.priceSummary.grandTotal}`,
+//           TrackingUrl: `https://casemandu.com.np/order/${createdOrder._id}`,
+//         },
+//       });
+//     } catch (err) {
+//       console.error("Email send failed:", err.message);
+//     }
+//   });
+// }
 // });
+
 
 const addOrderItems = asyncHandler(async (req, res) => {
   const {
@@ -341,10 +197,10 @@ const addOrderItems = asyncHandler(async (req, res) => {
   } = req.body;
 
   const paymentImage = req?.files?.paymentImage?.[0];
-  const customImage = req?.files?.customImage?.[0];
+  const customImage = req.files?.customImage || [];
 
   if (!paymentImage) {
-    return res.status(400).json({ message: "Payment image is required" });
+    return res.status(400).json({success:false, message: "Payment image is required" });
   }
 
   // ---------- Safe JSON parsing ----------
@@ -359,15 +215,11 @@ const addOrderItems = asyncHandler(async (req, res) => {
     return value;
   };
 
-  let orderItems, priceSummary, customCaseCoordinates;
+  let orderItems, priceSummary;
 
   try {
     orderItems = parseJSON(req.body.orderItems, "orderItems");
     priceSummary = parseJSON(req.body.priceSummary, "priceSummary");
-    customCaseCoordinates = parseJSON(
-      req.body.customCaseCoordinates,
-      "customCaseCoordinates"
-    );
   } catch (err) {
     return res.status(400).json({ message: err.message });
   }
@@ -384,17 +236,55 @@ const addOrderItems = asyncHandler(async (req, res) => {
   }
 
   // ---------- Parallel uploads ----------
-  const uploadTasks = [
-    compressAndUpload(paymentImage.buffer, "paymentImage"),
-  ];
+ const paymentUpload = compressAndUpload(
+  paymentImage.buffer,
+  "paymentImage"
+);
 
-  if (customImage) {
-    uploadTasks.push(
-      compressAndUpload(customImage.buffer, "customImage")
-    );
+  // console.log("custom Image", customImage);
+
+  const customUploads =
+    customImage.length > 0
+      ? customImage.map((file) =>
+          compressAndUpload(file.buffer, "customImage")
+        )
+      : [];
+
+  // console.log("custom uploads", customUploads);
+
+const [uploadedPayment, ...uploadedCustomImage] = await Promise.all([
+  paymentUpload,
+  ...customUploads,
+]);
+// console.log("...uploaded custom", ...uploadedCustomImage)
+
+
+
+const isCustomOrder = customImage.length > 0;
+if (isCustomOrder && customImage.length !== orderItems.length) {
+  return res.status(400).json({
+    success: false,
+    message: "Each custom item must have one image"
+  });
+}
+
+let customIndex = 0;
+
+orderItems = orderItems.map(item => {
+  if (isCustomOrder) {
+    return {
+      ...item,
+      isCustom: true,
+      customImage: uploadedCustomImage[customIndex++].secure_url,
+    };
   }
 
-  const [uploadedPayment, uploadedCustom] = await Promise.all(uploadTasks);
+  return {
+    ...item,
+    isCustom: false,
+    customImage: null,
+  };
+});
 
   // ---------- Parallel DB reads ----------
   const promoDoc = priceSummary?.promoCode
@@ -431,7 +321,7 @@ const addOrderItems = asyncHandler(async (req, res) => {
   const order_id = `ORD-${Date.now()}`;
 
   // ---------- Create order ----------
-  const newOrder = new Order({
+    const newOrder = new Order({
     order_id,
     name,
     phone,
@@ -441,20 +331,21 @@ const addOrderItems = asyncHandler(async (req, res) => {
     additionalInfo,
     paymentMethod,
     orderItems,
-    paymentImage: uploadedPayment?.secure_url,
-    customImage: uploadedCustom?.secure_url || null,
-    customCaseCoordinates,
+    paymentImage: uploadedPayment.secure_url,
     priceSummary,
   });
+
 
   const createdOrder = await newOrder.save();
 
   // ---------- Respond immediately ----------
   res.status(201).json({
+    success: true,
     message: "Order placed successfully",
     order_id: createdOrder.order_id,
     data: createdOrder
   });
+
 
   // ---------- Non-blocking socket emit ----------
   setImmediate(async () => {
@@ -524,7 +415,7 @@ async function createEmailTest({ body }) {
     service: "gmail", // Or your email provider
     auth: {
       user: "manducase@gmail.com",
-      pass: "zlcs xlgm xkjl nqzf", // For Gmail, this is an "App Password", not your regular password
+      pass: "urll npjn gqny mpqe", // For Gmail, this is an "App Password", not your regular password
     },
   });
 
@@ -743,31 +634,49 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
   }
 });
 
-const deleteOrder = async(req,res) =>{
+const deleteOrder = async (req, res) => {
   try {
-    const id =  req.params.id;
-    const deleteOrd = await Order.findByIdAndDelete(id);
-    if(!deleteOrd){
-      res.status(400).json({
-        success:false,
-        message:"Unable to delete"
-      })
-      return
-    }
-    res.status(200).json({
-      success:true,
-      message:"Deleted successfully"
-    })
+    const id = req.params.id;
 
-  } catch (error) {
-    if(error instanceof(Error)){
-      res.status(500).json({
-        success:false,
-        message:error.message
-      })
+    // ---------- Check if order exists ----------
+    const checkOrd = await Order.findById(id);
+    if (!checkOrd) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
     }
+
+    // ---------- Delete payment image from storage ----------
+    if (checkOrd.paymentImage) {
+      await deleteFile(checkOrd.paymentImage); // make sure deleteFile handles missing files
+    }
+
+    // ---------- Delete custom images if any ----------
+    if (checkOrd.orderItems && checkOrd.orderItems.length > 0) {
+      for (const item of checkOrd.orderItems) {
+        if (item.isCustom && item.customImage) {
+          await deleteFile(item.customImage);
+        }
+      }
+    }
+
+    // ---------- Delete the order ----------
+    await Order.findByIdAndDelete(id);
+
+    res.status(200).json({
+      success: true,
+      message: "Order deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete order error:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
-} 
+};
+
 
 // @desc Track order
 // @route GET /api/orders/track/:id

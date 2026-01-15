@@ -19,7 +19,7 @@ const uploader = multer(storage)
 
 router.post("/",uploader.fields([
     { name: "paymentImage", maxCount: 1 },
-    { name: "customImage", maxCount: 1 },
+    { name: "customImage" },
   ]),addOrderItems)
 router.route('/').get(protect, admin, getOrders)
 router.route('/track').get(trackOrder)

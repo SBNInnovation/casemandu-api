@@ -1,4 +1,4 @@
-const cloudinary = require("cloudinary");
+const cloudinary = require("cloudinary").v2;
 const dotenv = require("dotenv");
 const streamifier = require("streamifier");
 
@@ -29,19 +29,18 @@ if (
   process.exit(1);
 }
 
+const uploadToCloudinary = (buffer, folder) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {folder: `Casemandu/${folder}`, resource_type: "image" },
+      (error, result) => {
+        if (error) return reject(error);
+        return resolve(result);
+      }
+    );
 
-const uploadToCloudinary = async (base64String, folder) => {
-  try {
-    const uploaded = await cloudinary.uploader.upload(base64String, {
-      folder: `Casemandu/${folder}`,
-      resource_type: "image",
-      format: "webp",
-    });
-    return uploaded;
-  } catch (error) {
-    console.error("Cloudinary upload error:", error);
-    throw error;
-  }
+    streamifier.createReadStream(buffer).pipe(stream);
+  });
 };
 
 const deleteFile = async (secureUrl) => {

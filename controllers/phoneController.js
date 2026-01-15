@@ -267,9 +267,7 @@ const updatePhoneModelCustomize = expressAsyncHandler(async (req, res) => {
       .webp({ quality: 80 })
       .toBuffer();
 
-    const base64Data = `data:image/webp;base64,${optimizedBuffer.toString("base64")}`;
-
-    uploaded = await uploadToCloudinary(base64Data, "customize");
+    uploaded = await uploadToCloudinary(optimizedBuffer, "customize");
   }
 
   let parsedRatio;

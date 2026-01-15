@@ -35,11 +35,9 @@ const createCustomize = asyncHandler(async (req, res) => {
       .webp({ quality: 80 })
       .toBuffer();
   
-    const base64Data = `data:image/webp;base64,${optimizedBuffer.toString("base64")}`;
-  
     // Upload to Cloudinary
     const uploaded = await uploadToCloudinary(
-      base64Data,
+      optimizedBuffer,
       "customize"
     );
 
@@ -95,16 +93,13 @@ const updateCustomize = asyncHandler(async (req, res) => {
   const templateImg = req.file;
 
   const customize = await Customize.findById(req.params.id)
-  let uploaded, base64Data;
+  let uploaded;
   
     if (templateImg) {
       const optimizedBuffer = await sharp(image.buffer)
         .webp({ quality: 80 })
         .toBuffer();
-  
-      base64Data = `data:image/webp;base64,${optimizedBuffer.toString("base64")}`;
-  
-      uploaded = await uploadToCloudinary(base64Data, "products");
+      uploaded = await uploadToCloudinary(optimizedBuffer, "customize");
     }
 
   if (customize) {

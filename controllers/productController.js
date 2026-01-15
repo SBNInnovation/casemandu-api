@@ -19,36 +19,6 @@ const { uploadToCloudinary, deleteFile } = require("../utils/cloudinary");
 //       }
 //     : {};
 
-//   const count = await Product.countDocuments({ ...keyword });
-
-//   const pageSize = Number(req.query.pageSize) || count;
-//   const page = Number(req.query.pageNumber) || 1;
-//   const displayBy = req.query.displayBy || "createdAt";
-
-//   let sortCriteria = {};
-//   switch (displayBy) {
-//     case "newArrival":
-//       sortCriteria = { new: -1 };
-//       break;
-//     case "bestSeller":
-//       sortCriteria = { saleCount: -1 };
-//       break;
-//     case "mostPopular":
-//       sortCriteria = { totalViews: -1 };
-//       break;
-//     default:
-//       sortCriteria = { createdAt: -1 };
-//   }
-
-//   const products = await Product.find({ ...keyword })
-//     .populate("category", "title")
-//     .populate("option", "name route image") // Populate option
-//     .sort(sortCriteria)
-//     .limit(pageSize)
-//     .skip(pageSize * (page - 1));
-
-//   res.status(200).json({ products, page, pages: Math.ceil(count / pageSize) });
-// });
 
 const getProductForAdmin = async (req, res) => {
   try {
@@ -225,87 +195,6 @@ const getProductBySlug = asyncHandler(async (req, res) => {
 // @desc    Create a product
 // @route   POST /api/products
 // @access  Private/Admin
-// const createProduct = asyncHandler(async (req,res) => {
-//   const {
-//     title,
-//     image,
-//     category,
-//     optionId, // Optional
-//     features,
-//     description,
-//     price,
-//     discount,
-//     // new: isNew,
-//   } = req.body;
-
-//   // Validate category
-//   const categoryExists = await Category.findById(category);
-//   if (!categoryExists) {
-//     res.status(404);
-//     throw new Error("Category not found");
-//     return
-//   }
-
-//   let parsedFeatures;
-//   if(features){
-//     parsedFeatures = JSON.parse(features)
-//     if(parsedFeatures && !Array.isArray(parsedFeatures)){
-//       res.status(404).json({
-//         success:false,
-//         message:"features must be an array"
-//       })
-//       return
-//     }
-//   }
-
-//   // Validate option (optional)
-//   let optionExists = null;
-//   if (optionId) {
-//     optionExists = await Option.findById(optionId);
-//     if (!optionExists) {
-//       res.status(404);
-//       throw new Error("Option not found");
-//     }
-//     return
-//   }
-
-//   const now = new Date();
-
-//   const product = await Product.create({
-//     title,
-//     slug: await createSLUG(Product, title),
-//     image,
-//     category,
-//     option: optionId || undefined,
-//     features: parsedFeatures,
-//     description,
-//     price,
-//     discount,
-//     createdAt: now,
-//     updatedAt: now,
-//   });
-//   // await product.save();
-//   // console.log(product);
-
-
-// const productObj = product.toObject(); // ensures timestamps are included
-
-// return res.status(201).json({
-//   _id: productObj._id,
-//   slug: productObj.slug,
-//   title: productObj.title,
-//   image: productObj.image,
-//   category: productObj.category,
-//   option: productObj.option,
-//   features: productObj.features,
-//   description: productObj.description,
-//   tags: productObj.tags,
-//   price: productObj.price,
-//   discount: productObj.discount,
-//   createdAt: productObj.createdAt,
-//   updatedAt: productObj.updatedAt,
-// });
-// });
 
 const createProduct = asyncHandler(async (req, res) => {
   const {
@@ -328,17 +217,13 @@ const createProduct = asyncHandler(async (req, res) => {
   }
 
   // Compress + convert to webp
+ 
   const optimizedBuffer = await sharp(image.buffer)
     .webp({ quality: 80 })
     .toBuffer();
 
-  const base64Data = `data:image/webp;base64,${optimizedBuffer.toString("base64")}`;
+  uploaded = await uploadToCloudinary(optimizedBuffer, "products");
 
-  // Upload to Cloudinary
-  const uploaded = await uploadToCloudinary(
-    base64Data,
-    "products"
-  );
   // const uploaded = { secure_url: "https://via.placeholder.com/150" };
 
   // Validate category
@@ -428,17 +313,16 @@ const updateProduct = asyncHandler(async (req, res) => {
     throw new Error("Product not found");
   }
 
-  let uploaded, base64Data;
+  let uploaded;
 
   if (image) {
-    const optimizedBuffer = await sharp(image.buffer)
-      .webp({ quality: 80 })
-      .toBuffer();
+  const optimizedBuffer = await sharp(image.buffer)
+    .webp({ quality: 80 })
+    .toBuffer();
 
-    base64Data = `data:image/webp;base64,${optimizedBuffer.toString("base64")}`;
+  uploaded = await uploadToCloudinary(optimizedBuffer, "products");
+}
 
-    uploaded = await uploadToCloudinary(base64Data, "products");
-  }
 
   let parsedFeatures;
   if (features) {

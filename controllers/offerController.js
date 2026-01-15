@@ -98,12 +98,10 @@ const createOffer = asyncHandler(async (req, res) => {
         .webp({ quality: 80 })
         .toBuffer();
     
-      const base64Data = `data:image/webp;base64,${optimizedBuffer.toString("base64")}`;
-    
       // Upload to Cloudinary
       const uploaded = await uploadToCloudinary(
-        base64Data,
-        "options"
+        optimizedBuffer,
+        "offers"
       );
 
   const offer = new Offer({
@@ -141,55 +139,6 @@ const createOffer = asyncHandler(async (req, res) => {
 // route:   PUT /api/offers/:slug
 // access:  private/admin
 
-// const updateOffer = asyncHandler(async (req, res) => {
-//   const { title, category, description, price, discount, models } =
-//     req.body;
-
-//   const image = req.file;
-
-//   const offer = await Offer.findOne({ slug: req.params.slug })
-
-//    let uploaded, base64Data;
-      
-//         if (image) {
-//           const optimizedBuffer = await sharp(image.buffer)
-//             .webp({ quality: 80 })
-//             .toBuffer();
-      
-//           base64Data = `data:image/webp;base64,${optimizedBuffer.toString("base64")}`;
-      
-//           uploaded = await uploadToCloudinary(base64Data, "products");
-//         }
-
-//   if (offer) {
-//     offer.title = title || offer.title
-//     offer.slug = (title && (await createSLUG(Offer, title))) || offer.slug
-//     offer.image = uploaded?.secure_url || offer.image
-//     offer.category = category || offer.category
-//     offer.description = description || offer.description
-//     offer.price = price || offer.price
-//     offer.discount = discount || offer.discount
-//     offer.models = models || offer.models
-
-//     const updatedProduct = await offer.save()
-
-//     res.status(201).json({
-//       _id: updatedProduct._id,
-//       title: updatedProduct.title,
-//       slug: updatedProduct.slug,
-//       image: updatedProduct.image,
-//       category: updatedProduct.category,
-//       description: updatedProduct.description,
-//       price: updatedProduct.price,
-//       discount: updatedProduct.discount,
-//       models: updatedProduct.models,
-//     })
-//   }
-
-//   res.status(404)
-//   throw new Error('Offer not found')
-// })
-
 const updateOffer = asyncHandler(async (req, res) => {
   const { title, category, description, price, discount, models } = req.body
   const image = req.file
@@ -208,11 +157,7 @@ const updateOffer = asyncHandler(async (req, res) => {
       .webp({ quality: 80 })
       .toBuffer()
 
-    const base64Data = `data:image/webp;base64,${optimizedBuffer.toString(
-      'base64'
-    )}`
-
-    uploaded = await uploadToCloudinary(base64Data, 'products')
+    uploaded = await uploadToCloudinary(optimizedBuffer, 'offers')
   }
 
   if (title) {

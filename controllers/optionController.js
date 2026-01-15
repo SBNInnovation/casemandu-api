@@ -73,11 +73,9 @@ const createOption = asyncHandler(async (req, res) => {
     .webp({ quality: 80 })
     .toBuffer();
 
-  const base64Data = `data:image/webp;base64,${optimizedBuffer.toString("base64")}`;
-
   // Upload to Cloudinary
   const uploaded = await uploadToCloudinary(
-    base64Data,
+    optimizedBuffer,
     "options"
   );
 
@@ -100,16 +98,14 @@ const updateOption = asyncHandler(async (req, res) => {
 
   const option = await Option.findById(req.params.id);
 
-    let uploaded, base64Data;
+    let uploaded;
   
     if (image) {
       const optimizedBuffer = await sharp(image.buffer)
         .webp({ quality: 80 })
         .toBuffer();
   
-      base64Data = `data:image/webp;base64,${optimizedBuffer.toString("base64")}`;
-  
-      uploaded = await uploadToCloudinary(base64Data, "products");
+      uploaded = await uploadToCloudinary(optimizedBuffer, "options");
     }
 
   if (option) {
