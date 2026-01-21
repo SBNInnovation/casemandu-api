@@ -8,7 +8,6 @@ const { deleteFile } = require("../utils/cloudinary");
 // @route   POST /api/orders
 // @access  Public
 
-
 // const addOrderItems = asyncHandler(async (req, res) => {
 //   const {
 //     name,
@@ -83,7 +82,6 @@ const { deleteFile } = require("../utils/cloudinary");
 //       isActive: true,
 //     })
 //   : null;
-
 
 //   if (priceSummary?.promoCode && !promoDoc) {
 //     return res.status(400).json({ message: "Invalid promo code" });
@@ -184,7 +182,6 @@ const { deleteFile } = require("../utils/cloudinary");
 // }
 // });
 
-
 const addOrderItems = asyncHandler(async (req, res) => {
   const {
     name,
@@ -196,11 +193,18 @@ const addOrderItems = asyncHandler(async (req, res) => {
     paymentMethod,
   } = req.body;
 
+  const isCustomOrder = req.body.isCustomOrder === "true";
+
   const paymentImage = req?.files?.paymentImage?.[0];
-  const customImage = req.files?.customImage || [];
+
+  const customImage = Array.isArray(req.files?.customImage)
+    ? req.files.customImage
+    : [];
 
   if (!paymentImage) {
-    return res.status(400).json({success:false, message: "Payment image is required" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Payment image is required" });
   }
 
   // ---------- Safe JSON parsing ----------
@@ -231,69 +235,81 @@ const addOrderItems = asyncHandler(async (req, res) => {
       .json({ message: "Order items or price summary missing" });
   }
 
-  if (!name || !phone || !email || !city || !shippingAddress || !paymentMethod) {
+  if (
+    !name ||
+    !phone ||
+    !email ||
+    !city ||
+    !shippingAddress ||
+    !paymentMethod
+  ) {
     return res.status(400).json({ message: "All fields are required" });
   }
 
-  // ---------- Parallel uploads ----------
- const paymentUpload = compressAndUpload(
-  paymentImage.buffer,
-  "paymentImage"
-);
+  // ---------- Custom order validation BEFORE upload ----------
+  if (isCustomOrder) {
+    if (!orderItems || orderItems.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Custom order items missing",
+      });
+    }
 
-  // console.log("custom Image", customImage);
+    if (customImage.length !== orderItems.length) {
+      return res.status(400).json({
+        success: false,
+        message: "Each custom item must have exactly one image",
+      });
+    }
+  }
+
+  // ---------- Parallel uploads ----------
+  const paymentUpload = compressAndUpload(paymentImage.buffer, "paymentImage");
 
   const customUploads =
     customImage.length > 0
-      ? customImage.map((file) =>
-          compressAndUpload(file.buffer, "customImage")
-        )
+      ? customImage.map((file) => compressAndUpload(file.buffer, "customImage"))
       : [];
 
-  // console.log("custom uploads", customUploads);
+  const [uploadedPayment, ...uploadedCustomImage] = await Promise.all([
+    paymentUpload,
+    ...customUploads,
+  ]);
 
-const [uploadedPayment, ...uploadedCustomImage] = await Promise.all([
-  paymentUpload,
-  ...customUploads,
-]);
-// console.log("...uploaded custom", ...uploadedCustomImage)
+  try {
+    orderItems = orderItems.map((item, index) => {
+      if (isCustomOrder) {
+        if (!uploadedCustomImage[index]) {
+          throw new Error(`Custom image missing for item ${index}`);
+        }
 
+        return {
+          ...item,
+          isCustom: true,
+          customImage: uploadedCustomImage[index].secure_url,
+        };
+      }
 
-
-const isCustomOrder = customImage.length > 0;
-if (isCustomOrder && customImage.length !== orderItems.length) {
-  return res.status(400).json({
-    success: false,
-    message: "Each custom item must have one image"
-  });
-}
-
-let customIndex = 0;
-
-orderItems = orderItems.map(item => {
-  if (isCustomOrder) {
-    return {
-      ...item,
-      isCustom: true,
-      customImage: uploadedCustomImage[customIndex++].secure_url,
-    };
+      return {
+        ...item,
+        isCustom: false,
+        customImage: null,
+      };
+    });
+  } catch (err) {
+    return res.status(400).json({
+      success: false,
+      message: err.message,
+    });
   }
-
-  return {
-    ...item,
-    isCustom: false,
-    customImage: null,
-  };
-});
 
   // ---------- Parallel DB reads ----------
   const promoDoc = priceSummary?.promoCode
-  ? await PromocodeModel.findOne({
-      code: priceSummary.promoCode,
-      isActive: true,
-    })
-  : null;
-
+    ? await PromocodeModel.findOne({
+        code: priceSummary.promoCode,
+        isActive: true,
+      })
+    : null;
 
   if (priceSummary?.promoCode && !promoDoc) {
     return res.status(400).json({ message: "Invalid promo code" });
@@ -301,8 +317,7 @@ orderItems = orderItems.map(item => {
 
   // ---------- Price calculation ----------
   if (promoDoc) {
-    const discount =
-      (priceSummary.total * promoDoc.discount) / 100;
+    const discount = (priceSummary.total * promoDoc.discount) / 100;
 
     priceSummary.discountAmount =
       discount > promoDoc.maxAmount ? promoDoc.maxAmount : discount;
@@ -313,15 +328,14 @@ orderItems = orderItems.map(item => {
       priceSummary.deliveryCharge;
   } else {
     priceSummary.discountAmount = 0;
-    priceSummary.grandTotal =
-      priceSummary.total + priceSummary.deliveryCharge;
+    priceSummary.grandTotal = priceSummary.total + priceSummary.deliveryCharge;
   }
 
   // ---------- Generate order ID (existing logic) ----------
   const order_id = `ORD-${Date.now()}`;
 
   // ---------- Create order ----------
-    const newOrder = new Order({
+  const newOrder = new Order({
     order_id,
     name,
     phone,
@@ -335,7 +349,6 @@ orderItems = orderItems.map(item => {
     priceSummary,
   });
 
-
   const createdOrder = await newOrder.save();
 
   // ---------- Respond immediately ----------
@@ -343,9 +356,8 @@ orderItems = orderItems.map(item => {
     success: true,
     message: "Order placed successfully",
     order_id: createdOrder.order_id,
-    data: createdOrder
+    data: createdOrder,
   });
-
 
   // ---------- Non-blocking socket emit ----------
   setImmediate(async () => {
@@ -377,29 +389,28 @@ orderItems = orderItems.map(item => {
     }
   });
   if (createdOrder) {
-  setImmediate(async () => {
-    try {
-      await createEmailTest({
-        body: {
-          customerEmail: createdOrder.email,
-          name: createdOrder.name,
-          orderId: `Order Id: ${createdOrder.order_id}`,
-          TotalPrice: `Total Price: ${createdOrder.priceSummary.grandTotal}`,
-          TrackingUrl: `https://casemandu.com.np/order/${createdOrder._id}`,
-        },
-      });
-    } catch (err) {
-      console.error("Email send failed:", err.message);
-    }
-  });
-}
+    setImmediate(async () => {
+      try {
+        await createEmailTest({
+          body: {
+            customerEmail: createdOrder.email,
+            name: createdOrder.name,
+            orderId: `Order Id: ${createdOrder.order_id}`,
+            TotalPrice: `Total Price: ${createdOrder.priceSummary.grandTotal}`,
+            TrackingUrl: `https://casemandu.com.np/order/${createdOrder._id}`,
+          },
+        });
+      } catch (err) {
+        console.error("Email send failed:", err.message);
+      }
+    });
+  }
 });
 
-
 async function createEmailTest({ body }) {
-  const { customerEmail, orderId,TotalPrice, TrackingUrl, name } = body;
+  const { customerEmail, orderId, TotalPrice, TrackingUrl, name } = body;
 
-    if (!customerEmail || !orderId || !TotalPrice) {
+  if (!customerEmail || !orderId || !TotalPrice) {
     throw new Error("Missing email fields");
   }
 
@@ -429,7 +440,7 @@ async function createEmailTest({ body }) {
     from: "No-reply@casemandu.com.np <no-reply@casemandu.com.np>",
     to: customerEmail,
     subject: "Your Order from Casemandu!",
-   html: `
+    html: `
   <!DOCTYPE html>
   <html lang="en">
   <head>
@@ -677,7 +688,6 @@ const deleteOrder = async (req, res) => {
   }
 };
 
-
 // @desc Track order
 // @route GET /api/orders/track/:id
 // @access Private
@@ -705,5 +715,5 @@ module.exports = {
   updateOrderToDelivered,
   updateOrderStatus,
   trackOrder,
-  deleteOrder
+  deleteOrder,
 };
