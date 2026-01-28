@@ -1,4 +1,4 @@
-const express = require('express')
+const express = require("express");
 const {
   addOrderItems,
   getOrders,
@@ -6,24 +6,27 @@ const {
   getOrderById,
   trackOrder,
   deleteOrder,
-} = require('../controllers/orderController')
-const multer = require("multer")
-const { protect, admin } = require('../middlewares/authMiddleware.js')
+} = require("../controllers/orderController");
+const multer = require("multer");
+const { protect, admin } = require("../middlewares/authMiddleware.js");
 
-const router = express.Router()
+const router = express.Router();
 
-const storage = multer.memoryStorage()
+const storage = multer.memoryStorage();
 
-const uploader = multer(storage)
+const uploader = multer(storage);
 
-
-router.post("/",uploader.fields([
+router.post(
+  "/",
+  uploader.fields([
     { name: "paymentImage", maxCount: 1 },
     { name: "customImage" },
-  ]),addOrderItems)
-router.route('/').get(protect, admin, getOrders)
-router.route('/track').get(trackOrder)
-router.route('/:id').get(getOrderById).delete(deleteOrder)
-router.route('/:id/status').put(protect, admin, updateOrderStatus)
+  ]),
+  addOrderItems,
+);
+router.route("/").get(protect, admin, getOrders);
+router.route("/track").get(trackOrder);
+router.route("/:id").get(getOrderById).delete(deleteOrder);
+router.route("/:id/status").put(protect, admin, updateOrderStatus);
 
-module.exports = router
+module.exports = router;

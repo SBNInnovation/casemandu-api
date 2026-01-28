@@ -3,8 +3,8 @@ const dotenv = require("dotenv");
 const connectDB = require("./config/connectDB.js");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const http = require("http")
-const {Server} = require("socket.io")
+const http = require("http");
+const { Server } = require("socket.io");
 const serverless = require("serverless-http"); // import
 
 // importing middlewares
@@ -34,8 +34,6 @@ const Order = require("./models/orderModel.js");
 // const PhoneModel = require("./models/phoneModel.js");
 // const Category = require("./models/categoryModel.js");
 
-
-
 const app = express();
 const server = http.createServer(app);
 
@@ -43,12 +41,20 @@ dotenv.config();
 connectDB();
 
 // CORS Policy
-app.use(cors({
-      origin: ["https://casemandu-admin.vercel.app","http://localhost:3000", "https://casemandu-client.vercel.app","https://customize-new-1.vercel.app","https://casemandu.com.np","https://customize.casemandu.com.np","https://admin.casemandu.com.np"],
-      methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-      credentials: true, // Allow cookies
-    })
-  )
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "https://casemandu.com.np",
+      "https://www.casemandu.com.np",
+      "https://customize.casemandu.com.np",
+      "https://admin.casemandu.com.np",
+    ],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  }),
+);
+
+app.options("*", cors());
 
 // Body parser
 app.use(express.json());
@@ -71,7 +77,6 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/options", optionRoutes);
 app.use("/api/dashboard", dashboardRouter);
 
-
 app.get("/", (req, res) => {
   res.send("Casemandu api is running...");
 });
@@ -87,7 +92,13 @@ const PORT = process.env.PORT || 5000;
 
 const io = new Server(server, {
   cors: {
-    origin:  ["https://casemandu-admin.vercel.app","http://localhost:3000", "https://casemandu-client.vercel.app","https://customize-new-1.vercel.app","https://casemandu.com.np","https://customize.casemandu.com.np","https://admin.casemandu.com.np"], // change in production
+    origin: [
+      "http://localhost:3000",
+      "https://casemandu.com.np",
+      "https://www.casemandu.com.np",
+      "https://customize.casemandu.com.np",
+      "https://admin.casemandu.com.np",
+    ], // change in production
     methods: ["GET", "POST"],
   },
 });
@@ -112,7 +123,6 @@ server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-
 module.exports = { server };
 //updated
 
@@ -120,4 +130,4 @@ module.exports = { server };
 // module.exports = app;
 // module.exports.handler = serverless(app);
 
- // "node": "18.x"
+// "node": "18.x"
