@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+const mongoose = require("mongoose");
 const phoneSchema = new mongoose.Schema(
   {
     name: {
@@ -19,7 +19,7 @@ const phoneSchema = new mongoose.Schema(
         caseTypes: [
           {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'CaseType',
+            ref: "CaseType",
           },
         ],
         price: {
@@ -38,19 +38,23 @@ const phoneSchema = new mongoose.Schema(
             default: 0,
           },
         },
-        isActivate:{
-        type:Boolean,
-        default:true
-    }
+        isActivate: {
+          type: Boolean,
+          default: true,
+        },
+        isDeleted: {
+          type: Boolean,
+          default: false,
+        },
       },
     ],
   },
   {
     timestamps: true,
-  }
-)
+  },
+);
 
 const PhoneModel =
-  mongoose.models.phones || mongoose.model('Phone', phoneSchema)
+  mongoose.models.phones || mongoose.model("Phone", phoneSchema);
 
-module.exports = PhoneModel
+module.exports = PhoneModel;

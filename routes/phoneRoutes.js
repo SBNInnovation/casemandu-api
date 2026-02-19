@@ -1,4 +1,4 @@
-const express = require('express')
+const express = require("express");
 const {
   deletePhoneModel,
   insertPhoneModel,
@@ -13,36 +13,46 @@ const {
   getModelByID,
   changeStatus,
   deletePhoneModelCustomize,
-} = require('../controllers/phoneController')
-const { protect, admin } = require('../middlewares/authMiddleware')
+  deleteSelectedPhoneModel,
+  deleteAllPhoneModels,
+} = require("../controllers/phoneController");
+const { protect, admin } = require("../middlewares/authMiddleware");
 const multer = require("multer");
 
-const router = express.Router()
+const router = express.Router();
 
-const storage= multer.memoryStorage();
+const storage = multer.memoryStorage();
 
-const uploader = multer({storage});
+const uploader = multer({ storage });
 
-router.route('/').get(getPhones).patch(changeStatus)
-router.route('/brands').get(getPhoneBrands).post(protect, admin, createBrand)
+router.route("/").get(getPhones).patch(changeStatus);
+router.route("/brands").get(getPhoneBrands).post(protect, admin, createBrand);
 router
-  .route('/brands/:id')
+  .route("/brands/:id")
   .get(getBrandsById)
   .delete(protect, admin, deleteBrand)
   .put(protect, admin, updateBrand)
-  .post(protect, admin, insertPhoneModel)
+  .post(protect, admin, insertPhoneModel);
 
 router
-  .put('/models/customize/:id', uploader.single("templateImg"), protect, admin, updatePhoneModelCustomize)
-  .delete("/models/customize/:id",deletePhoneModelCustomize)
+  .put(
+    "/models/customize/:id",
+    uploader.single("templateImg"),
+    protect,
+    admin,
+    updatePhoneModelCustomize,
+  )
+  .delete("/models/customize/:id", deletePhoneModelCustomize);
 
 router
-  .route('/models/:id')
+  .route("/models/:id")
   .get(getModelByID)
   .put(protect, admin, updatePhoneModel)
   .delete(protect, admin, deletePhoneModel)
+  .patch(protect, admin, deleteSelectedPhoneModel)
+  .post(protect, admin, deleteAllPhoneModels);
 
-module.exports = router
+module.exports = router;
 // const deletePhoneModelCustomize = async (req, res) => {
 //   try {
 //     const id = req.params.id;

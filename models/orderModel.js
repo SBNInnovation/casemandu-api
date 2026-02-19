@@ -106,8 +106,6 @@
 
 // module.exports = Order;
 
-
-
 const mongoose = require("mongoose");
 
 const orderItemSchema = new mongoose.Schema(
@@ -116,8 +114,8 @@ const orderItemSchema = new mongoose.Schema(
     qty: { type: Number, require: true },
     image: { type: String, require: true },
     price: { type: Number, require: true },
-    variant: { type: String, default:""},
-    isCustom:{type:Boolean,default:false},
+    variant: { type: String, default: "" },
+    isCustom: { type: Boolean, default: false },
     customImage: {
       type: String,
       default: "",
@@ -142,8 +140,8 @@ const orderItemSchema = new mongoose.Schema(
     },
   },
   {
-    _id: false, 
-  }
+    _id: false,
+  },
 );
 
 const orderSchema = new mongoose.Schema(
@@ -207,10 +205,14 @@ const orderSchema = new mongoose.Schema(
       deliveryCharge: { type: Number, required: true, default: 0.0 },
       grandTotal: { type: Number, required: true, default: 0.0 },
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const Order = mongoose.model("Order", orderSchema);

@@ -1,7 +1,7 @@
-const PhoneModel = require('../models/phoneModel')
-const Customize = require('../models/customizeModel')
-const expressAsyncHandler = require('express-async-handler');
-const { uploadToCloudinary, deleteFile } = require('../utils/cloudinary');
+const PhoneModel = require("../models/phoneModel");
+const Customize = require("../models/customizeModel");
+const expressAsyncHandler = require("express-async-handler");
+const { uploadToCloudinary, deleteFile } = require("../utils/cloudinary");
 const sharp = require("sharp");
 
 // @desc   Fetch all phones
@@ -14,14 +14,14 @@ const getPhones = expressAsyncHandler(async (req, res) => {
   const phones = await PhoneModel.find()
     .sort({ name: 1 })
     .populate("models.caseTypes", "name price description");
-    
+
   if (activation === "active") {
-    phones.forEach(phone => {
-      phone.models = phone.models.filter(model => model.isActivate === true);
+    phones.forEach((phone) => {
+      phone.models = phone.models.filter((model) => model.isActivate === true);
     });
   } else if (activation === "inactive") {
-    phones.forEach(phone => {
-      phone.models = phone.models.filter(model => model.isActivate === false);
+    phones.forEach((phone) => {
+      phone.models = phone.models.filter((model) => model.isActivate === false);
     });
   }
 
@@ -31,7 +31,6 @@ const getPhones = expressAsyncHandler(async (req, res) => {
   res.json(phones);
 });
 
-
 // @desc   Fetch all phone brands
 // @route  GET /api/phones/brands
 // @access Public
@@ -39,201 +38,273 @@ const getPhones = expressAsyncHandler(async (req, res) => {
 const getPhoneBrands = expressAsyncHandler(async (req, res) => {
   const phones = await PhoneModel.find({})
     .sort({ name: 1 })
-    .select('name thumbnail')
+    .select("name thumbnail");
 
-  res.json(phones)
-})
+  res.json(phones);
+});
 
 // @desc Get models by brand
 // @route GET /api/phones/brands/:id
 // @access Public
 
 const getModelsByBrand = expressAsyncHandler(async (req, res) => {
-  const phone = await PhoneModel.findById(req.params.id)
+  const phone = await PhoneModel.findById(req.params.id);
 
   if (!phone) {
-    res.status(404)
-    throw new Error('Phone not found')
+    res.status(404);
+    throw new Error("Phone not found");
   }
 
-  res.json(phone.models)
-})
+  res.json(phone.models);
+});
 
 // @desc Create a phone
 // @route POST /api/phones
 // @access Private/Admin
 
 const createBrand = expressAsyncHandler(async (req, res) => {
-  let { name, thumbnail } = req.body
+  let { name, thumbnail } = req.body;
 
   if (!name || !thumbnail) {
-    res.status(400)
-    throw new Error('All fields are required')
+    res.status(400);
+    throw new Error("All fields are required");
   }
-  name = name.toUpperCase()
+  name = name.toUpperCase();
 
-  const brandExists = await PhoneModel.findOne({ name })
+  const brandExists = await PhoneModel.findOne({ name });
 
   if (brandExists) {
-    res.status(400)
-    throw new Error('Brand already exists')
+    res.status(400);
+    throw new Error("Brand already exists");
   }
 
   const phone = new PhoneModel({
     name,
     thumbnail,
-  })
+  });
 
-  await phone.save()
+  await phone.save();
 
   res.status(201).json({
-    message: 'Brand created',
-  })
-})
+    message: "Brand created",
+  });
+});
 
 // @desc  Update a phone
 // @route PUT /api/phones/:id
 // @access Private/Admin
 
 const updateBrand = expressAsyncHandler(async (req, res) => {
-  const phone = await PhoneModel.findById(req.params.id)
+  const phone = await PhoneModel.findById(req.params.id);
 
   if (!phone) {
-    res.status(404)
-    throw new Error('Phone not found')
+    res.status(404);
+    throw new Error("Phone not found");
   }
 
-  let { name, thumbnail } = req.body
-  name = name.toUpperCase()
+  let { name, thumbnail } = req.body;
+  name = name.toUpperCase();
 
   if (!name) {
-    res.status(400)
-    throw new Error('Brand is required')
+    res.status(400);
+    throw new Error("Brand is required");
   }
 
   const brandExists = await PhoneModel.findOne({
     name,
-  })
+  });
 
   if (brandExists) {
-    res.status(400)
-    throw new Error('Brand already exists')
+    res.status(400);
+    throw new Error("Brand already exists");
   }
 
-  phone.name = name || phone.name
-  phone.thumbnail = thumbnail || phone.thumbnail
+  phone.name = name || phone.name;
+  phone.thumbnail = thumbnail || phone.thumbnail;
 
-  await phone.save()
+  await phone.save();
 
   res.status(200).json({
-    message: 'Brand updated',
-  })
-})
+    message: "Brand updated",
+  });
+});
 
 // @desc  Insert a phone model
 // @route POST /api/phones/models/:id
 // @access Private/Admin
 
 const insertPhoneModel = expressAsyncHandler(async (req, res) => {
-  const phone = await PhoneModel.findById(req.params.id)
+  const phone = await PhoneModel.findById(req.params.id);
 
   if (!phone) {
-    res.status(404)
-    throw new Error('Phone not found')
+    res.status(404);
+    throw new Error("Phone not found");
   }
-  let { name, caseTypes, price, templateImg, ratio } = req.body
-  name = name.toUpperCase()
+  let { name, caseTypes, price, templateImg, ratio } = req.body;
+  name = name.toUpperCase();
 
-  const modelExists = phone?.models.find((model) => model.name === name)
+  const modelExists = phone?.models.find((model) => model.name === name);
 
   if (modelExists) {
-    res.status(400)
-    throw new Error('Model already exists')
+    res.status(400);
+    throw new Error("Model already exists");
   }
 
-  phone.models.push({ name, caseTypes, price, templateImg, ratio })
-  await phone.save()
+  phone.models.push({ name, caseTypes, price, templateImg, ratio });
+  await phone.save();
   res.status(201).json({
-    message: 'Phone model inserted',
-  })
-})
+    message: "Phone model inserted",
+  });
+});
 
 // @desc  Delete a phone model
 // @route DELETE /api/phones/models/:id
 // @access Private/Admin
 
 const deletePhoneModel = expressAsyncHandler(async (req, res) => {
-  const phone = await PhoneModel.findById(req.params.id)
+  const phone = await PhoneModel.findById(req.params.id);
 
   if (!phone) {
-    res.status(404)
-    throw new Error('Phone not found')
+    res.status(404);
+    throw new Error("Phone not found");
   }
   const model = phone.models.find(
-    (model) => String(model._id) === req.query.modelID
-  )
+    (model) => String(model._id) === req.query.modelID,
+  );
 
   if (!model) {
-    res.status(404)
-    throw new Error('Model not found')
+    res.status(404);
+    throw new Error("Model not found");
   }
 
   phone.models = phone.models.filter(
-    (model) => String(model._id) !== req.query.modelID
-  )
+    (model) => String(model._id) !== req.query.modelID,
+  );
 
-  await phone.save()
+  await phone.save();
 
   res.status(200).json({
-    message: 'Phone model deleted',
-  })
-})
+    message: "Phone model deleted",
+  });
+});
+
+const deleteSelectedPhoneModel = async (req, res) => {
+  const phone = await PhoneModel.findById(req.params.id);
+
+  if (!phone) {
+    res.status(404).json({
+      success: false,
+      message: "Phone not found",
+    });
+    return;
+  }
+
+  if (!Array.isArray(req.body.modelIDs) || req.body.modelIDs.length === 0) {
+    res.status(400).json({
+      success: false,
+      message: "Model IDs are required",
+    });
+    return;
+  }
+
+  if (!Array.isArray(req.body.modelIDs) || req.body.modelIDs.length === 0) {
+    res.status(400).json({
+      success: false,
+      message: "Model IDs are required",
+    });
+    return;
+  }
+
+  const modelsToDelete = phone.models.filter((model) =>
+    req.body.modelIDs.includes(String(model._id)),
+  );
+
+  if (modelsToDelete.length === 0) {
+    res.status(404).json({
+      success: false,
+      message: "No models found",
+    });
+    return;
+  }
+
+  modelsToDelete.forEach((model) => {
+    model.isDeleted = true;
+  });
+
+  await phone.save();
+
+  res.status(200).json({
+    message: "Selected phone models deleted",
+  });
+};
+
+const deleteAllPhoneModels = async (req, res) => {
+  const phone = await PhoneModel.findById(req.params.id);
+
+  if (!phone) {
+    res.status(404).json({
+      success: false,
+      message: "Phone not found",
+    });
+    return;
+  }
+
+  phone.models.forEach((model) => {
+    model.isDeleted = false;
+  });
+
+  await phone.save();
+
+  res.status(200).json({
+    message: "All phone models deleted",
+  });
+};
 
 // @desc  Update a phone model
 // @route PUT /api/phones/models/:id
 // @access Private/Admin
 
 const updatePhoneModel = expressAsyncHandler(async (req, res) => {
-  const phone = await PhoneModel.findById(req.params.id)
+  const phone = await PhoneModel.findById(req.params.id);
 
   if (!phone) {
-    res.status(404)
-    throw new Error('Phone not found')
+    res.status(404);
+    throw new Error("Phone not found");
   }
   const model = phone.models.find(
-    (model) => String(model._id) === req.query.modelID
-  )
+    (model) => String(model._id) === req.query.modelID,
+  );
 
   if (!model) {
-    res.status(404)
-    throw new Error('Model not found')
+    res.status(404);
+    throw new Error("Model not found");
   }
-  let { name, caseTypes } = req.body
+  let { name, caseTypes } = req.body;
 
   if (!name) {
-    res.status(400)
-    throw new Error('Name is required')
+    res.status(400);
+    throw new Error("Name is required");
   }
-  name = name.toUpperCase()
+  name = name.toUpperCase();
 
   // check if the new name already exists
   const modelExists = phone.models.find(
-    (model) => model.name === name && String(model._id) !== req.query.modelID
-  )
+    (model) => model.name === name && String(model._id) !== req.query.modelID,
+  );
 
   if (modelExists) {
-    res.status(400)
-    throw new Error('Model already exists')
+    res.status(400);
+    throw new Error("Model already exists");
   }
-  model.name = name || model.name
-  model.caseTypes = caseTypes || model.caseTypes
+  model.name = name || model.name;
+  model.caseTypes = caseTypes || model.caseTypes;
 
-  await phone.save()
+  await phone.save();
 
   res.status(200).json({
-    message: 'Phone model updated',
-  })
-}) 
+    message: "Phone model updated",
+  });
+});
 
 // @desc  Update a phone model customize
 // @route PUT /api/phones/models/customize/:id
@@ -244,16 +315,16 @@ const updatePhoneModelCustomize = expressAsyncHandler(async (req, res) => {
 
   if (!phone) {
     res.status(404);
-    throw new Error('Phone not found');
+    throw new Error("Phone not found");
   }
 
   const model = phone.models.find(
-    (model) => String(model._id) === req.query.modelID
+    (model) => String(model._id) === req.query.modelID,
   );
 
   if (!model) {
     res.status(404);
-    throw new Error('Model not found');
+    throw new Error("Model not found");
   }
 
   const { price, ratio, name } = req.body;
@@ -271,8 +342,8 @@ const updatePhoneModelCustomize = expressAsyncHandler(async (req, res) => {
   }
 
   let parsedRatio;
-  if(ratio){
-    parsedRatio = JSON.parse(ratio)
+  if (ratio) {
+    parsedRatio = JSON.parse(ratio);
   }
 
   // Update fields only if provided
@@ -284,7 +355,7 @@ const updatePhoneModelCustomize = expressAsyncHandler(async (req, res) => {
   await phone.save();
 
   res.status(200).json({
-    message: 'Phone model updated',
+    message: "Phone model updated",
   });
 });
 
@@ -303,7 +374,7 @@ const deletePhoneModelCustomize = async (req, res) => {
     const { modelID } = req.query;
 
     const checkModel = checkPhone.models.find(
-      (model) => String(model._id) === modelID
+      (model) => String(model._id) === modelID,
     );
 
     if (!checkModel) {
@@ -315,12 +386,12 @@ const deletePhoneModelCustomize = async (req, res) => {
 
     // FIX: Delete image of that model
     if (checkModel.templateImg) {
-      await deleteFile(checkModel.templateImg); 
+      await deleteFile(checkModel.templateImg);
     }
 
     // Remove model from array
     checkPhone.models = checkPhone.models.filter(
-      (model) => String(model._id) !== modelID
+      (model) => String(model._id) !== modelID,
     );
 
     await checkPhone.save();
@@ -329,7 +400,6 @@ const deletePhoneModelCustomize = async (req, res) => {
       success: true,
       message: "Model deleted successfully",
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -344,42 +414,42 @@ const deletePhoneModelCustomize = async (req, res) => {
 // @access Private/Admin
 
 const deleteBrand = expressAsyncHandler(async (req, res) => {
-  const phone = await PhoneModel.findById(req.params.id)
+  const phone = await PhoneModel.findById(req.params.id);
 
   if (!phone) {
-    res.status(404)
-    throw new Error('Phone not found')
+    res.status(404);
+    throw new Error("Phone not found");
   }
 
   // delete if the phone has no models
   if (phone.models.length) {
-    res.status(400)
-    throw new Error('Delete all models first')
+    res.status(400);
+    throw new Error("Delete all models first");
   }
 
-  await deleteFile(phone.model.templateImg)
+  await deleteFile(phone.model.templateImg);
 
-  await phone.deleteOne()
+  await phone.deleteOne();
 
   res.status(200).json({
-    message: 'Phone deleted',
-  })
-})
+    message: "Phone deleted",
+  });
+});
 
 // @desc Get a phone by ID
 // @route ObjectGET /api/phones/:id
 // @access Public
 
 const getBrandsById = expressAsyncHandler(async (req, res) => {
-  const phone = await PhoneModel.findById(req.params.id)
+  const phone = await PhoneModel.findById(req.params.id);
 
   if (!phone) {
-    res.status(404)
-    throw new Error('Phone not found')
+    res.status(404);
+    throw new Error("Phone not found");
   }
 
-  res.json(phone)
-})
+  res.json(phone);
+});
 
 // @desc Get a phone model by ID
 // @route GET /api/phones/models/:id
@@ -390,19 +460,19 @@ const getModelByID = expressAsyncHandler(async (req, res) => {
 
   // find the only model that matches the id
   const model = await PhoneModel.findOne({
-    'models._id': req.params.id,
-  })
+    "models._id": req.params.id,
+  });
 
-  const modelObject = model.models.id(req.params.id)
+  const modelObject = model.models.id(req.params.id);
 
   if (!modelObject || !modelObject?.templateImg) {
-    res.status(404)
-    throw new Error('Model not found')
+    res.status(404);
+    throw new Error("Model not found");
   }
 
   // return the model object
-  res.json(modelObject)
-})
+  res.json(modelObject);
+});
 
 // const changeStatus = async(req,res)=>{
 // try {
@@ -507,7 +577,6 @@ const changeStatus = async (req, res) => {
   }
 };
 
-
 module.exports = {
   getPhones,
   getPhoneBrands,
@@ -522,5 +591,7 @@ module.exports = {
   getModelByID,
   updatePhoneModelCustomize,
   changeStatus,
-  deletePhoneModelCustomize
-}
+  deletePhoneModelCustomize,
+  deleteSelectedPhoneModel,
+  deleteAllPhoneModels,
+};

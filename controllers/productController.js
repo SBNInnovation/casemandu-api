@@ -19,7 +19,6 @@ const { uploadToCloudinary, deleteFile } = require("../utils/cloudinary");
 //       }
 //     : {};
 
-
 const getProductForAdmin = async (req, res) => {
   try {
     const page = Math.max(parseInt(req.query.page) || 1, 1);
@@ -99,7 +98,15 @@ const getProductForAdmin = async (req, res) => {
     // Dashboard counters
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    const endOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+      999,
+    );
 
     const [
       totalProducts,
@@ -133,7 +140,6 @@ const getProductForAdmin = async (req, res) => {
         },
       },
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -141,7 +147,6 @@ const getProductForAdmin = async (req, res) => {
     });
   }
 };
-
 
 // @desc    Get all products by category
 // @route   GET /api/products/category/:slug
@@ -177,7 +182,7 @@ const getProductBySlug = asyncHandler(async (req, res) => {
   const product = await Product.findOne({ slug: req.params.slug })
     .populate(
       "category",
-      "title slug description price isCase extraField placeholder"
+      "title slug description price isCase extraField placeholder",
     )
     .populate("option", "name route image"); // Populate option
 
@@ -205,6 +210,7 @@ const createProduct = asyncHandler(async (req, res) => {
     description,
     price,
     discount,
+    youtubeLink,
   } = req.body;
 
   const image = req.file;
@@ -217,7 +223,7 @@ const createProduct = asyncHandler(async (req, res) => {
   }
 
   // Compress + convert to webp
- 
+
   const optimizedBuffer = await sharp(image.buffer)
     .webp({ quality: 80 })
     .toBuffer();
@@ -273,6 +279,7 @@ const createProduct = asyncHandler(async (req, res) => {
     description,
     price,
     discount,
+    youtubeLink,
   });
 
   if (!addProduct) {
@@ -302,6 +309,7 @@ const updateProduct = asyncHandler(async (req, res) => {
     description,
     price,
     discount,
+    youtubeLink,
   } = req.body;
 
   const image = req.file;
@@ -316,13 +324,12 @@ const updateProduct = asyncHandler(async (req, res) => {
   let uploaded;
 
   if (image) {
-  const optimizedBuffer = await sharp(image.buffer)
-    .webp({ quality: 80 })
-    .toBuffer();
+    const optimizedBuffer = await sharp(image.buffer)
+      .webp({ quality: 80 })
+      .toBuffer();
 
-  uploaded = await uploadToCloudinary(optimizedBuffer, "products");
-}
-
+    uploaded = await uploadToCloudinary(optimizedBuffer, "products");
+  }
 
   let parsedFeatures;
   if (features) {
@@ -347,8 +354,7 @@ const updateProduct = asyncHandler(async (req, res) => {
   }
 
   product.title = title || product.title;
-  product.slug =
-    (title && (await createSLUG(Product, title))) || product.slug;
+  product.slug = (title && (await createSLUG(Product, title))) || product.slug;
   product.image = uploaded?.secure_url || product.image;
   product.category = category || product.category;
   product.tags = tags || product.tags;
@@ -356,6 +362,7 @@ const updateProduct = asyncHandler(async (req, res) => {
   product.description = description || product.description;
   product.price = price || product.price;
   product.discount = discount || product.discount;
+  product.youtubeLink = youtubeLink || product.youtubeLink;
 
   const updatedProduct = await product.save();
 
@@ -371,11 +378,11 @@ const updateProduct = asyncHandler(async (req, res) => {
     description: updatedProduct.description,
     price: updatedProduct.price,
     discount: updatedProduct.discount,
+    youtubeLink: updatedProduct.youtubeLink,
     createdAt: updatedProduct.createdAt,
     updatedAt: updatedProduct.updatedAt,
   });
 });
-
 
 // @desc    Delete a product
 // @route   DELETE /api/products/:slug
@@ -388,13 +395,12 @@ const deleteProduct = asyncHandler(async (req, res) => {
     throw new Error("Product not found");
   }
 
-  await deleteFile(product.image)
+  await deleteFile(product.image);
 
   await product.deleteOne();
 
   res.json({ message: "Product deleted" });
 });
-
 
 const changeActivation = async (req, res) => {
   try {
@@ -421,7 +427,7 @@ const changeActivation = async (req, res) => {
     const updated = await Product.findByIdAndUpdate(
       id,
       { isActivate },
-      { new: true }
+      { new: true },
     );
 
     if (!updated) {
@@ -434,9 +440,8 @@ const changeActivation = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: isActivate ? "Activated" : "Deactivated",
-      data: updated
+      data: updated,
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -445,50 +450,61 @@ const changeActivation = async (req, res) => {
   }
 };
 
-const changeNewStatus = async(req,res) =>{
- try {
-    const {id} = req.query;
-    const {status} = req.body;
+const changeNewStatus = async (req, res) => {
+  try {
+    const { id } = req.query;
+    const { status } = req.body;
 
-    if(!id){
+    if (!id) {
       res.status({
-        success:false,
-        message:"Product Id is required"
-      })
-      return
+        success: false,
+        message: "Product Id is required",
+      });
+      return;
     }
 
-    if(status !== "new" && status !== "old"){
-       { res.status(400).json({ success: false, message: "Invalid status value. Use 'new' or 'old'." });
-                return;
-        }      
+    if (status !== "new" && status !== "old") {
+      {
+        res.status(400).json({
+          success: false,
+          message: "Invalid status value. Use 'new' or 'old'.",
+        });
+        return;
+      }
     }
 
-     if(status === "new"){
-            const prd = await Product.findByIdAndUpdate(id,{isNew:true},{new:true});
-            if(!prd){
-                res.status(404).json({success:false, message:"Unable to update"})
-                return
-            }
-            res.status(200).json({success:true, message:"Changed to new"});
-        }else if(status === "old"){
-            const prd = await Product.findByIdAndUpdate(id,{isNew:false},{new:true});
-            if(!prd){
-                res.status(404).json({success:false, message:"Unable to update"})
-                return
-            }
-            res.status(200).json({success:true, message:"Changed to old"});
-        }
-
+    if (status === "new") {
+      const prd = await Product.findByIdAndUpdate(
+        id,
+        { isNew: true },
+        { new: true },
+      );
+      if (!prd) {
+        res.status(404).json({ success: false, message: "Unable to update" });
+        return;
+      }
+      res.status(200).json({ success: true, message: "Changed to new" });
+    } else if (status === "old") {
+      const prd = await Product.findByIdAndUpdate(
+        id,
+        { isNew: false },
+        { new: true },
+      );
+      if (!prd) {
+        res.status(404).json({ success: false, message: "Unable to update" });
+        return;
+      }
+      res.status(200).json({ success: true, message: "Changed to old" });
+    }
   } catch (error) {
-    if(error instanceof(Error)){
+    if (error instanceof Error) {
       res.status(500).json({
-        success:false,
-        message:error.message
-      })
+        success: false,
+        message: error.message,
+      });
     }
   }
-}
+};
 
 module.exports = {
   // getProducts,
@@ -499,5 +515,5 @@ module.exports = {
   changeActivation,
   changeNewStatus,
   getProductForAdmin,
-  createProduct
+  createProduct,
 };

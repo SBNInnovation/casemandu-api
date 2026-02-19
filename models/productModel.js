@@ -29,9 +29,9 @@ const productSchema = mongoose.Schema(
         type: String,
       },
     ],
-    features:{
-      type:[String],
-      default:[]
+    features: {
+      type: [String],
+      default: [],
     },
     description: {
       type: String,
@@ -54,26 +54,30 @@ const productSchema = mongoose.Schema(
       type: Number,
       default: 0,
     },
-    isNew:{
-      type:Boolean,
+    isNew: {
+      type: Boolean,
       default: false,
+    },
+    youtubeLink: {
+      type: String,
+      default: "",
     },
     // new: {
     //   type: Boolean,
     //   default: false,
     // },
-    isActivate:{
-      type:Boolean,
-      default:false
+    isActivate: {
+      type: Boolean,
+      default: false,
     },
-    createdAt:{
-      type:Date,
-      default:Date.now()
-    }
+    createdAt: {
+      type: Date,
+      default: Date.now(),
+    },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const Product = mongoose.model("Product", productSchema);
