@@ -7,7 +7,7 @@ const {
   getyoutubeLink,
 } = require("../controllers/youtubelink");
 
-router.post("/youtube", addyoutubeLink);
-router.get("/youtube", getyoutubeLink);
+router.post("/", addyoutubeLink);
+router.get("/", getyoutubeLink);
 
 module.exports = router;

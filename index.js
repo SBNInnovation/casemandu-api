@@ -30,7 +30,7 @@ const youtubeRoutes = require("./routes/youtubeRoute.js");
 
 // const Product = require("./models/productModel.js");
 const { dashboardRouter } = require("./routes/dashboardRoutes.js");
-const { deleteMany } = require("./models/orderModel.js");
+// const { deleteMany } = require("./models/orderModel.js");
 const Order = require("./models/orderModel.js");
 // const PhoneModel = require("./models/phoneModel.js");
 // const Category = require("./models/categoryModel.js");
