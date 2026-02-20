@@ -202,16 +202,8 @@ const getProductBySlug = asyncHandler(async (req, res) => {
 // @access  Private/Admin
 
 const createProduct = asyncHandler(async (req, res) => {
-  const {
-    title,
-    category,
-    optionId,
-    features,
-    description,
-    price,
-    discount,
-    youtubeLink,
-  } = req.body;
+  const { title, category, optionId, features, description, price, discount } =
+    req.body;
 
   const image = req.file;
   // console.log(req.file)
@@ -279,7 +271,6 @@ const createProduct = asyncHandler(async (req, res) => {
     description,
     price,
     discount,
-    youtubeLink,
   });
 
   if (!addProduct) {
@@ -309,7 +300,6 @@ const updateProduct = asyncHandler(async (req, res) => {
     description,
     price,
     discount,
-    youtubeLink,
   } = req.body;
 
   const image = req.file;
@@ -362,7 +352,6 @@ const updateProduct = asyncHandler(async (req, res) => {
   product.description = description || product.description;
   product.price = price || product.price;
   product.discount = discount || product.discount;
-  product.youtubeLink = youtubeLink || product.youtubeLink;
 
   const updatedProduct = await product.save();
 
@@ -378,7 +367,6 @@ const updateProduct = asyncHandler(async (req, res) => {
     description: updatedProduct.description,
     price: updatedProduct.price,
     discount: updatedProduct.discount,
-    youtubeLink: updatedProduct.youtubeLink,
     createdAt: updatedProduct.createdAt,
     updatedAt: updatedProduct.updatedAt,
   });

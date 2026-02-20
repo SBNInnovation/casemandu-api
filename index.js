@@ -26,6 +26,7 @@ const pinterestRoute = require("./routes/pinterestRoutes.js");
 const emailTest = require("./routes/ConfirmEmail.js");
 const aiRoutes = require("./routes/aiRoute.js");
 const optionRoutes = require("./routes/optionRoutes.js");
+const youtubeRoutes = require("./routes/youtubeRoute.js");
 
 // const Product = require("./models/productModel.js");
 const { dashboardRouter } = require("./routes/dashboardRoutes.js");
@@ -76,6 +77,7 @@ app.use("/api/emailtest", emailTest);
 app.use("/api/ai", aiRoutes);
 app.use("/api/options", optionRoutes);
 app.use("/api/dashboard", dashboardRouter);
+app.use("/api/youtube", youtubeRoutes);
 
 app.get("/", (req, res) => {
   res.send("Casemandu api is running...");

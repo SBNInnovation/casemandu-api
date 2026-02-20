@@ -58,10 +58,6 @@ const productSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    youtubeLink: {
-      type: String,
-      default: "",
-    },
     // new: {
     //   type: Boolean,
     //   default: false,

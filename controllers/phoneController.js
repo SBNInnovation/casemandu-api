@@ -17,11 +17,15 @@ const getPhones = expressAsyncHandler(async (req, res) => {
 
   if (activation === "active") {
     phones.forEach((phone) => {
-      phone.models = phone.models.filter((model) => model.isActivate === true);
+      phone.models =
+        phone.models.filter((model) => model.isActivate === true) &&
+        phone.models.filter((model) => model.isDeleted === false);
     });
   } else if (activation === "inactive") {
     phones.forEach((phone) => {
-      phone.models = phone.models.filter((model) => model.isActivate === false);
+      phone.models =
+        phone.models.filter((model) => model.isActivate === false) &&
+        phone.models.filter((model) => model.isDeleted === false);
     });
   }
 
