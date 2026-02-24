@@ -53,7 +53,6 @@ const getPhoneBrands = expressAsyncHandler(async (req, res) => {
 
 const getModelsByBrand = expressAsyncHandler(async (req, res) => {
   const phone = await PhoneModel.findById(req.params.id);
-
   if (!phone) {
     res.status(404);
     throw new Error("Phone not found");
@@ -451,6 +450,7 @@ const getBrandsById = expressAsyncHandler(async (req, res) => {
     res.status(404);
     throw new Error("Phone not found");
   }
+  phone.models = phone.models.filter((model) => model.isDeleted === false);
 
   res.json(phone);
 });
@@ -477,60 +477,6 @@ const getModelByID = expressAsyncHandler(async (req, res) => {
   // return the model object
   res.json(modelObject);
 });
-
-// const changeStatus = async(req,res)=>{
-// try {
-//     const { id } = req.query;
-//     const { activation } = req.body;
-
-//     if (!id) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Model Id is required",
-//       });
-//     }
-
-//     // validation
-//     if (activation !== "active" && activation !== "inactive") {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Invalid activation value. Use 'active' or 'inactive'.",
-//       });
-//     }
-
-//     const isActivate = activation === "active";
-
-//     const findModels = await PhoneModel.findOne({models._id:id})
-//     if(findModels){
-//       findModels.model.isActivate = true;
-//       await findModels.save();
-//     }
-//     // const updated = await PhoneModel.findByIdAndUpdate(
-//     //   id,
-//     //   { isActivate },
-//     //   { new: true }
-//     // );
-
-//     if (!findModels) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Model not found",
-//       });
-//     }
-
-//     return res.status(200).json({
-//       success: true,
-//       message: isActivate ? "Activated" : "Deactivated",
-//       data: updated
-//     });
-
-//   } catch (error) {
-//     return res.status(500).json({
-//       success: false,
-//       message: error.message,
-//     });
-//   }
-// }
 
 const changeStatus = async (req, res) => {
   try {
