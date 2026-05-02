@@ -21,7 +21,7 @@ const getOptions = asyncHandler(async (req, res) => {
         _id: opt._id,
         name: opt.name,
         route: opt.route,
-        features: opt.features,
+        // features: opt.features,
         description: opt.description,
         image: opt.image,
         createdAt: opt.createdAt,
@@ -55,11 +55,11 @@ const getOptionById = asyncHandler(async (req, res) => {
 // route    POST /api/options
 // access   private/admin
 const createOption = asyncHandler(async (req, res) => {
-  const { name, route, features, description } = req.body;
+  const { name, route, description } = req.body;
 
   const image = req.file;
 
-  if (!name || !route || !features || !description) {
+  if (!name || !route || !description) {
     res.status(400);
     throw new Error("Please add all fields (name, route, image)");
   }
@@ -82,7 +82,7 @@ const createOption = asyncHandler(async (req, res) => {
     name,
     route,
     image: uploaded.secure_url,
-    features,
+    // features,
     description,
   });
 
@@ -95,7 +95,7 @@ const createOption = asyncHandler(async (req, res) => {
 // route    PUT /api/options/:id
 // access   private/admin
 const updateOption = asyncHandler(async (req, res) => {
-  const { name, route, features, description } = req.body;
+  const { name, route, description } = req.body;
 
   const image = req.file;
 
@@ -115,7 +115,7 @@ const updateOption = asyncHandler(async (req, res) => {
     option.name = name || option.name;
     option.route = route || option.route;
     option.image = uploaded?.secure_url || option.image;
-    option.features = features || option.features;
+    // option.features = features || option.features;
     option.description = description || option.description;
 
     const updatedOption = await option.save();
@@ -155,14 +155,14 @@ const getProductsByOptionName = asyncHandler(async (req, res) => {
   const products = await Product.find({
     $or: [
       { title: regex },
-      { description: regex },
+      // { description: regex },
       { tags: regex },
       { category: { $in: matchedCategoryIds } },
       { option: { $in: matchedOptionIds } },
     ],
   })
     .populate("category", "title")
-    .populate("option", "name route image");
+    .populate("option", "name route image description");
 
   res.status(200).json({ success: true, data: products });
 });

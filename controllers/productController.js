@@ -82,6 +82,7 @@ const getProductForAdmin = async (req, res) => {
 
     // Fetch products
     const products = await Product.find(query)
+      .populate("option", "name description")
       .populate("category", "title -_id")
       .sort(sortQuery)
       .limit(limit)
@@ -162,7 +163,7 @@ const getProductsByCategory = asyncHandler(async (req, res) => {
 
     const products = await Product.find({ category: category._id })
       .populate("category", "title")
-      .populate("option", "name route image") // Populate option
+      .populate("option", "name route image description") // Populate option
       .limit(pageSize)
       .skip(pageSize * (page - 1));
 
@@ -184,7 +185,7 @@ const getProductBySlug = asyncHandler(async (req, res) => {
       "category",
       "title slug description price isCase extraField placeholder",
     )
-    .populate("option", "name route image"); // Populate option
+    .populate("option", "name route image description"); // Populate option
 
   if (product) {
     product.totalViews += 1;
@@ -222,12 +223,12 @@ const createProduct = asyncHandler(async (req, res) => {
   uploaded = await uploadToCloudinary(optimizedBuffer, "products");
 
   // const uploaded = { secure_url: "https://via.placeholder.com/150" };
-  const findOption = await Option.findById(optionId);
-  if (!findOption) {
-    return res
-      .status(404)
-      .json({ success: false, message: "Design option not found." });
-  }
+  // const findOption = await Option.findById(optionId);
+  // if (!findOption) {
+  //   return res
+  //     .status(404)
+  //     .json({ success: false, message: "Design option not found." });
+  // }
 
   // Validate category
   const categoryExists = await Category.findById(category);
@@ -237,24 +238,24 @@ const createProduct = asyncHandler(async (req, res) => {
   }
 
   // Validate features (optional)
-  let parsedFeatures = undefined;
-  if (findOption.features) {
-    try {
-      parsedFeatures = JSON.parse(features);
+  // let parsedFeatures = undefined;
+  // if (findOption.features) {
+  //   try {
+  //     parsedFeatures = JSON.parse(features);
 
-      if (!Array.isArray(parsedFeatures)) {
-        return res.status(400).json({
-          success: false,
-          message: "Features must be an array",
-        });
-      }
-    } catch (e) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid JSON format for features",
-      });
-    }
-  }
+  //     if (!Array.isArray(parsedFeatures)) {
+  //       return res.status(400).json({
+  //         success: false,
+  //         message: "Features must be an array",
+  //       });
+  //     }
+  //   } catch (e) {
+  //     return res.status(400).json({
+  //       success: false,
+  //       message: "Invalid JSON format for features",
+  //     });
+  //   }
+  // }
 
   // Save product
   const addProduct = await Product.create({
@@ -263,8 +264,8 @@ const createProduct = asyncHandler(async (req, res) => {
     image: uploaded.secure_url,
     category,
     option: optionId,
-    features: parsedFeatures || "",
-    des0cription: findOption.description || "",
+    // features: parsedFeatures || "",
+    // des0cription: findOption.description || "",
     price,
     discount,
   });
@@ -307,36 +308,36 @@ const updateProduct = asyncHandler(async (req, res) => {
 
     uploaded = await uploadToCloudinary(optimizedBuffer, "products");
   }
-  let findOption;
-  if (optionId) {
-    findOption = await Option.findById(optionId);
-    if (!findOption) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Design option not found." });
-    }
-    product.option = optionId;
-  }
+  // let findOption;
+  // if (optionId) {
+  //   findOption = await Option.findById(optionId);
+  //   if (!findOption) {
+  //     return res
+  //       .status(404)
+  //       .json({ success: false, message: "Design option not found." });
+  //   }
+  //   product.option = optionId;
+  // }
 
-  let parsedFeatures;
-  if (findOption.features) {
-    parsedFeatures = JSON.parse(findOption.features);
+  // let parsedFeatures;
+  // if (findOption.features) {
+  //   parsedFeatures = JSON.parse(findOption.features);
 
-    if (!Array.isArray(parsedFeatures)) {
-      return res.status(400).json({
-        success: false,
-        message: "features must be an array",
-      });
-    }
-  }
+  //   if (!Array.isArray(parsedFeatures)) {
+  //     return res.status(400).json({
+  //       success: false,
+  //       message: "features must be an array",
+  //     });
+  //   }
+  // }
 
   product.title = title || product.title;
   product.slug = (title && (await createSLUG(Product, title))) || product.slug;
   product.image = uploaded?.secure_url || product.image;
   product.category = category || product.category;
   product.tags = tags || product.tags;
-  product.features = parsedFeatures || product.features;
-  product.description = findOption.description || product.description;
+  // product.features = parsedFeatures || product.features;
+  // product.description = findOption.description || product.description;
   product.price = price || product.price;
   product.discount = discount || product.discount;
 
@@ -350,8 +351,8 @@ const updateProduct = asyncHandler(async (req, res) => {
     category: updatedProduct.category,
     option: updatedProduct.option,
     tags: updatedProduct.tags,
-    features: updatedProduct.features,
-    description: updatedProduct.description,
+    // features: updatedProduct.features,
+    // description: updatedProduct.description,
     price: updatedProduct.price,
     discount: updatedProduct.discount,
     createdAt: updatedProduct.createdAt,
