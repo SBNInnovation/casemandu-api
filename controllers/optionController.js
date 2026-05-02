@@ -171,32 +171,48 @@ const getProductsByOptionName = asyncHandler(async (req, res) => {
 // route    DELETE /api/options/:id
 // access   private/admin
 const deleteOption = asyncHandler(async (req, res) => {
-  const checkProductOfOption = await Product.find({ option: req.params.id });
-  if (checkProductOfOption.length > 0) {
-    res.status(200).json({
-      success: false,
-      message: "Product of this option is still present, cannot delete.",
-    });
-    return;
-  }
-  const checkOption = await Option.findById(req.params.id);
-  if (!checkOption) {
-    res.status(400).json({
-      success: false,
-      message: "option not found",
-    });
-    return;
-  }
-  const option = await Option.findByIdAndDelete(req.params.id);
+  const optionId = req.params.id;
 
-  await deleteFile(checkOption.image);
-
-  if (option) {
-    res.json({ success: true, message: "Option deleted" });
-  } else {
-    res.status(404);
-    throw new Error("Option not found");
+  // 1. Check option first
+  const option = await Option.findById(optionId);
+  if (!option) {
+    return res.status(404).json({
+      success: false,
+      message: "Option not found",
+    });
   }
+
+  // 2. Get products (only select image for efficiency)
+  const products = await Product.find({ option: optionId }).select("image");
+
+  // 3. Delete DB records
+  await Product.deleteMany({ option: optionId });
+  await Option.findByIdAndDelete(optionId);
+
+  // 4. Delete product images in parallel
+  await Promise.all(
+    products
+      .filter((p) => p.image)
+      .map((p) =>
+        deleteFile(p.image).catch((err) => {
+          console.error("Product image delete failed:", err.message);
+        }),
+      ),
+  );
+
+  // 5. Delete option image
+  if (option.image) {
+    try {
+      await deleteFile(option.image);
+    } catch (err) {
+      console.error("Option image delete failed:", err.message);
+    }
+  }
+
+  res.json({
+    success: true,
+    message: "Option and related products deleted",
+  });
 });
 
 module.exports = {
