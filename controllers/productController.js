@@ -202,8 +202,7 @@ const getProductBySlug = asyncHandler(async (req, res) => {
 // @access  Private/Admin
 
 const createProduct = asyncHandler(async (req, res) => {
-  const { title, category, optionId, features, description, price, discount } =
-    req.body;
+  const { title, category, optionId, price, discount } = req.body;
 
   const image = req.file;
   // console.log(req.file)
@@ -223,6 +222,12 @@ const createProduct = asyncHandler(async (req, res) => {
   uploaded = await uploadToCloudinary(optimizedBuffer, "products");
 
   // const uploaded = { secure_url: "https://via.placeholder.com/150" };
+  const findOption = await Option.findById(optionId);
+  if (!findOption) {
+    return res
+      .status(404)
+      .json({ success: false, message: "Design option not found." });
+  }
 
   // Validate category
   const categoryExists = await Category.findById(category);
@@ -233,7 +238,7 @@ const createProduct = asyncHandler(async (req, res) => {
 
   // Validate features (optional)
   let parsedFeatures = undefined;
-  if (features) {
+  if (findOption.features) {
     try {
       parsedFeatures = JSON.parse(features);
 
@@ -251,15 +256,6 @@ const createProduct = asyncHandler(async (req, res) => {
     }
   }
 
-  // Validate optionId (optional)
-  if (optionId) {
-    const optionExists = await Option.findById(optionId);
-    if (!optionExists) {
-      res.status(404);
-      throw new Error("Option not found");
-    }
-  }
-
   // Save product
   const addProduct = await Product.create({
     title,
@@ -267,8 +263,8 @@ const createProduct = asyncHandler(async (req, res) => {
     image: uploaded.secure_url,
     category,
     option: optionId,
-    features: parsedFeatures,
-    description,
+    features: parsedFeatures || "",
+    des0cription: findOption.description || "",
     price,
     discount,
   });
@@ -291,16 +287,7 @@ const createProduct = asyncHandler(async (req, res) => {
 // @route   PUT /api/products/:slug
 // @access  Private/Admin
 const updateProduct = asyncHandler(async (req, res) => {
-  const {
-    title,
-    category,
-    tags,
-    optionId,
-    features,
-    description,
-    price,
-    discount,
-  } = req.body;
+  const { title, category, tags, optionId, price, discount } = req.body;
 
   const image = req.file;
 
@@ -320,10 +307,20 @@ const updateProduct = asyncHandler(async (req, res) => {
 
     uploaded = await uploadToCloudinary(optimizedBuffer, "products");
   }
+  let findOption;
+  if (optionId) {
+    findOption = await Option.findById(optionId);
+    if (!findOption) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Design option not found." });
+    }
+    product.option = optionId;
+  }
 
   let parsedFeatures;
-  if (features) {
-    parsedFeatures = JSON.parse(features);
+  if (findOption.features) {
+    parsedFeatures = JSON.parse(findOption.features);
 
     if (!Array.isArray(parsedFeatures)) {
       return res.status(400).json({
@@ -333,23 +330,13 @@ const updateProduct = asyncHandler(async (req, res) => {
     }
   }
 
-  // ✔ Option check
-  if (optionId) {
-    const optionExists = await Option.findById(optionId);
-    if (!optionExists) {
-      res.status(404);
-      throw new Error("Option not found");
-    }
-    product.option = optionId;
-  }
-
   product.title = title || product.title;
   product.slug = (title && (await createSLUG(Product, title))) || product.slug;
   product.image = uploaded?.secure_url || product.image;
   product.category = category || product.category;
   product.tags = tags || product.tags;
   product.features = parsedFeatures || product.features;
-  product.description = description || product.description;
+  product.description = findOption.description || product.description;
   product.price = price || product.price;
   product.discount = discount || product.discount;
 
@@ -388,6 +375,35 @@ const deleteProduct = asyncHandler(async (req, res) => {
   await product.deleteOne();
 
   res.json({ message: "Product deleted" });
+});
+
+const deleteMany = asyncHandler(async (req, res) => {
+  const { ids } = req.body;
+
+  if (!ids || !Array.isArray(ids)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid request. Please provide an array of product IDs.",
+    });
+  }
+
+  const products = await Product.find({ _id: { $in: ids } });
+
+  if (products.length === 0) {
+    return res.status(404).json({
+      success: false,
+      message: "No products found.",
+    });
+  }
+
+  await Promise.all(
+    products.map(async (product) => {
+      await deleteFile(product.image);
+      await product.deleteOne();
+    }),
+  );
+
+  res.json({ message: "Products deleted" });
 });
 
 const changeActivation = async (req, res) => {
@@ -504,4 +520,5 @@ module.exports = {
   changeNewStatus,
   getProductForAdmin,
   createProduct,
+  deleteMany,
 };
