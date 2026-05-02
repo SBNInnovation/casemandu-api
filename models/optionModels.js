@@ -18,14 +18,22 @@ const OptionSchema = new mongoose.Schema(
       type: String,
       required: [true, "Please add an image URL for the option"], // Image is now required
     },
-    delete_url:{
-      type:String,
-      default:""
-    }
+    features: {
+      type: [String],
+      required: [true, "Please add features for the option"],
+    },
+    description: {
+      type: String,
+      required: [true, "Please add a description for the option"],
+    },
+    delete_url: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const Option = mongoose.model("Option", OptionSchema);

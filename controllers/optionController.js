@@ -4,12 +4,12 @@ const Option = require("../models/optionModels.js");
 const Product = require("../models/productModel.js");
 const Category = require("../models/categoryModel.js");
 const { uploadToCloudinary, deleteFile } = require("../utils/cloudinary.js");
-const sharp = require("sharp")
+const sharp = require("sharp");
 
 // @desc    Get all options
 // route    GET /api/options
 // access   public
- const getOptions = asyncHandler(async (req, res) => {
+const getOptions = asyncHandler(async (req, res) => {
   // Fetch all options
   const options = await Option.find({}).sort({ createdAt: -1 });
 
@@ -21,12 +21,14 @@ const sharp = require("sharp")
         _id: opt._id,
         name: opt.name,
         route: opt.route,
+        features: opt.features,
+        description: opt.description,
         image: opt.image,
         createdAt: opt.createdAt,
         updatedAt: opt.updatedAt,
         productCount,
       };
-    })
+    }),
   );
 
   res.status(200).json({
@@ -42,7 +44,7 @@ const getOptionById = asyncHandler(async (req, res) => {
   const option = await Option.findById(req.params.id);
 
   if (option) {
-    res.status(200).json({success:true,data:option});
+    res.status(200).json({ success: true, data: option });
   } else {
     res.status(404);
     throw new Error("Option not found");
@@ -53,11 +55,11 @@ const getOptionById = asyncHandler(async (req, res) => {
 // route    POST /api/options
 // access   private/admin
 const createOption = asyncHandler(async (req, res) => {
-  const { name, route } = req.body;
+  const { name, route, features, description } = req.body;
 
-  const image = req.file
+  const image = req.file;
 
-  if (!name || !route) {
+  if (!name || !route || !features || !description) {
     res.status(400);
     throw new Error("Please add all fields (name, route, image)");
   }
@@ -74,48 +76,54 @@ const createOption = asyncHandler(async (req, res) => {
     .toBuffer();
 
   // Upload to Cloudinary
-  const uploaded = await uploadToCloudinary(
-    optimizedBuffer,
-    "options"
-  );
+  const uploaded = await uploadToCloudinary(optimizedBuffer, "options");
 
   const option = await Option.create({
     name,
     route,
-    image:uploaded.secure_url
+    image: uploaded.secure_url,
+    features,
+    description,
   });
 
-  res.status(201).json({success:true, message:"created successfully",data:option});
+  res
+    .status(201)
+    .json({ success: true, message: "created successfully", data: option });
 });
 
 // @desc    Update an option
 // route    PUT /api/options/:id
 // access   private/admin
 const updateOption = asyncHandler(async (req, res) => {
-  const { name, route} = req.body;
+  const { name, route, features, description } = req.body;
 
   const image = req.file;
 
   const option = await Option.findById(req.params.id);
 
-    let uploaded;
-  
-    if (image) {
-      const optimizedBuffer = await sharp(image.buffer)
-        .webp({ quality: 80 })
-        .toBuffer();
-  
-      uploaded = await uploadToCloudinary(optimizedBuffer, "options");
-    }
+  let uploaded;
+
+  if (image) {
+    const optimizedBuffer = await sharp(image.buffer)
+      .webp({ quality: 80 })
+      .toBuffer();
+
+    uploaded = await uploadToCloudinary(optimizedBuffer, "options");
+  }
 
   if (option) {
     option.name = name || option.name;
     option.route = route || option.route;
     option.image = uploaded?.secure_url || option.image;
-    // option.delete_url = delete_url || option.delete_url;
+    option.features = features || option.features;
+    option.description = description || option.description;
 
     const updatedOption = await option.save();
-    res.json({success:true, message:"Updated successfully", data:updatedOption});
+    res.json({
+      success: true,
+      message: "Updated successfully",
+      data: updatedOption,
+    });
   } else {
     res.status(404);
     throw new Error("Option not found");
@@ -156,36 +164,35 @@ const getProductsByOptionName = asyncHandler(async (req, res) => {
     .populate("category", "title")
     .populate("option", "name route image");
 
-  res.status(200).json({success:true, data:products});
+  res.status(200).json({ success: true, data: products });
 });
 
 // @desc    Delete an option
 // route    DELETE /api/options/:id
 // access   private/admin
 const deleteOption = asyncHandler(async (req, res) => {
-
-  const checkProductOfOption = await Product.find({option: req.params.id})
-  if(checkProductOfOption.length > 0){
+  const checkProductOfOption = await Product.find({ option: req.params.id });
+  if (checkProductOfOption.length > 0) {
     res.status(200).json({
-      success:false,
-      message:"Product of this option is still present, cannot delete."
-    })
-    return
+      success: false,
+      message: "Product of this option is still present, cannot delete.",
+    });
+    return;
   }
   const checkOption = await Option.findById(req.params.id);
-  if(!checkOption){
+  if (!checkOption) {
     res.status(400).json({
-      success:false,
-      message:"option not found"
-    })
-    return
+      success: false,
+      message: "option not found",
+    });
+    return;
   }
   const option = await Option.findByIdAndDelete(req.params.id);
 
-  await deleteFile(checkOption.image)
+  await deleteFile(checkOption.image);
 
   if (option) {
-    res.json({success:true, message: "Option deleted"});
+    res.json({ success: true, message: "Option deleted" });
   } else {
     res.status(404);
     throw new Error("Option not found");
